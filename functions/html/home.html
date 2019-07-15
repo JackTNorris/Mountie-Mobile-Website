@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<title>Mountie Mobile | Home</title>
+
+<head>
+    <style>
+        body {
+            margin: none;
+        }
+        
+        h1 {
+            color: blue;
+            text-align: center;
+        }
+        
+        #currentEventsTitle {
+            text-align: center;
+            font-size: 50px;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+        
+        #add-event-button {
+            float: right;
+        }
+        
+        #create-announcement-button {
+            float: left;
+        }
+        
+        #topMenu {
+            margin: auto;
+            background-color: blue;
+        }
+        
+        table {
+            width: 800px;
+        }
+        
+        th {
+            text-align: center;
+            border-bottom: 2px solid black;
+            border-top: 1px solid black;
+        }
+        
+        tr {
+            text-align: center;
+        }
+        
+        tr.even {
+            background-color: lightblue;
+        }
+        
+        tr:hover {
+            color: blue;
+            cursor: pointer;
+            width: 1000px;
+        }
+        
+        tr.announcements:hover {
+            cursor: auto;
+        }
+        
+        #eventList {
+            text-align: center;
+            padding-bottom: 60px;
+            border-bottom: 2px solid black;
+        }
+        
+        #catSelect {
+            text-align: center;
+        }
+        
+        li {
+            display: inline-block;
+            margin-right: 50px;
+            margin-left: 50px;
+            margin-bottom: 50px;
+        }
+        
+        li#academicFilter {
+            margin-left: 0px;
+        }
+        
+        .filterButtons {
+            width: 100px;
+            height: 100px;
+            transition: all .3s ease-in-out;
+            transform: scale(1);
+            outline: 0;
+        }
+        
+        .filterButtons#academicsFilter {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .filterButtons#artsFilter {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .filterButtons#athleticsFilter {
+            padding-bottom: 10px;
+        }
+        
+        .filterButtons:hover {
+            transform: scale(1.5);
+        }
+        
+        #eventTable {
+            padding-bottom: 100px;
+            border-bottom: 10px solid black;
+        }
+        
+        #announcementsTitle {
+            text-align: center;
+            font-size: 50px;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+        
+        .even.announcements {
+            background-color: rgba(11, 218, 11, 0.544);
+        }
+        
+        #announcementList {
+            margin-bottom: 100px;
+        }
+        
+        #storeEliminateButton {
+            background-color: white;
+            width: 30px;
+            border-bottom: 0px;
+            border-top: 0px;
+        }
+        
+        #deleteAnnouncementButton:hover {
+            -webkit-filter: invert() sepia() saturate(8000%) drop-shadow(3px 3px 5px red);
+        }
+        
+        tr.announcements:hover {
+            color: black;
+        }
+        
+        #thing1 {
+            background-color: 'white';
+        }
+    </style>
+
+    <script>
+        var writeEventTable = function(filtButton) {
+            setAllBlack();
+            switch (filtButton.getAttribute('id')) {
+                case 'academicsFilter':
+                    filtButton.style.webkitFilter = "invert() sepia() saturate(8000%) drop-shadow(3px 3px 5px blue)";
+                    break;
+                case 'artsFilter':
+                    filtButton.style.webkitFilter = "invert() sepia() saturate(8000%) drop-shadow(3px 3px 5px blue)";
+                    break;
+                case 'athleticsFilter':
+                    filtButton.style.webkitFilter = "invert() sepia() saturate(8000%) drop-shadow(3px 3px 5px blue)";
+                    break;
+                case 'otherFilter':
+                    filtButton.style.webkitFilter = "invert() sepia() saturate(8000%) drop-shadow(3px 3px 5px blue)";
+                    break;
+            }
+        }
+
+
+        var setAllBlack = function() {
+            let filtButtons = document.getElementsByClassName('filterButtons');
+            for (let i = 0; i < filtButtons.length; i++) {
+                filtButtons[i].style.webkitFilter = '';
+            }
+        }
+    </script>
+</head>
+
+
+
+<body>
+
+    <h1 id="logo"><img src="./images/websiteLogo.png" width="823" class="topStuff" /></h1>
+
+    <div id="buttons">
+        <form id="create-announcement-button" class="topStuff">
+            <input type="image" src="./images/create-announcement-button.png" width="200" class="topStuff" />
+        </form>
+        <form method="GET" action="/addEvent" id="add-event-button" class="topStuff">
+            <input type="image" src="./images/addEventButton.png" width="200" />
+        </form>
+    </div>
+    </br>
+    <h2 id='currentEventsTitle'>Events</h2>
+
+    <div id="catSelect">
+        <ul>
+            <li id="academicFilter"><input type="image" onclick="writeEventTable(this)" src="./images/academicsFilter.png" id="academicsFilter" class="filterButtons" /></li>
+            <li><input type="image" onclick="writeEventTable(this)" src="./images/artsFilter.png" id="artsFilter" class="filterButtons" /></li>
+            <li><input type="image" onclick="writeEventTable(this)" src="./images/athleticsFilter.png" id="athleticsFilter" class="filterButtons" /></li>
+            <li><input type="image" onclick="writeEventTable(this)" src="./images/otherFilter.png" id="otherFilter" class="filterButtons" /></li>
+        </ul>
+    </div>
+
+
+    <div id='eventList'>
+        <table align="center">
+            <tr class='even'>
+                <th>Event</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Date & Time</th>
+            </tr>
+            <tr onclick="viewEvent(this)" id="RHS Golf vs Heritage" class="data">
+                <td>RHS Golf vs Heritage</td>
+            </tr>
+            <tr class='even'>
+                <td>RHS Football vs Bentonville</td>
+            </tr>
+        </table>
+    </div>
+
+
+
+
+    <!--New Stuff-->
+
+    <h2 id="announcementsTitle">Announcements</h2>
+
+    <div id='announcementList'>
+        <table align="center">
+            <tr class='even announcements'>
+                <th>Announcement</th>
+                <th id="storeEliminateButton"></th>
+            </tr>
+            <tr id="RHS Golf vs Heritage" class="data announcements">
+                <td>RHS Golf vs Heritage</td>
+                <td><input id="deleteAnnouncementButton" type="image" src="./images/deleteAnnouncementButton.png" width='15px' /></td>
+            </tr>
+            <tr class='even announcements'>
+                <td>RHS Football vs Bentonville</td>
+                <td id="thing1"><input id="deleteAnnouncementButton" type="image" src="./images/deleteAnnouncementButton.png" width='15px' id=/></td>
+            </tr>
+
+
+
+        </table>
+    </div>
+
+
+
+
+    <!--New Stuff-->
+
+    <form method="POST" action="/viewEvent" id="eventViewer">
+        <input type="hidden" name="event2view" value="" />
+    </form>
+
+
+    <script>
+        var e;
+        window.onload = function() {
+            e = document.getElementById('eventViewer');
+        }
+
+
+
+        var viewEvent = function(input) {
+            var t = document.getElementsByName('event2view')[0];
+            t.value = input.name;
+            e.submit();
+        }
+    </script>
+</body>
+
+
+
+</html>

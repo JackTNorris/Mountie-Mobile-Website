@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Mountie Mobile | Add Event</title>
+
+</head>
+<style>
+    #logo {
+        text-align: center;
+    }
+    
+    #add-event-title {
+        text-align: center;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    #infoBox {
+        width: 300px;
+        height: 100px;
+        resize: none;
+    }
+    
+    #submitButton {
+        width: 100px;
+        border-color: blue;
+        border-radius: 20px;
+        transition: width 1s;
+    }
+    
+    #submitButton:hover {
+        width: 150px;
+    }
+    
+    .inputData {
+        margin-left: 30px;
+        border-width: 1px;
+    }
+    
+    .inputData#check {
+        margin-left: 10px;
+    }
+</style>
+
+<script type="text/javascript">
+    function writeActivityBox() {
+
+        var thing2 = document.getElementById("activity");
+        thing2.innerHTML = "<option style=\"display:none\">";
+        switch (document.getElementById("category").value) {
+            case "athletics":
+                thing2.innerHTML = "<option value= \"baseball\">Baseball</option>" +
+                    "<option value= \"basketball\">Basketball</option>" +
+                    "<option value= \"bowling\">Bowling</option>" +
+                    "<option value= \"cross country\">Cross Country</option>" +
+                    "<option value= \"football\">Football</option>" +
+                    "<option value= \"golf\">Golf</option>" +
+                    "<option value= \"track and field\">Track and Field</option>" +
+                    "<option value= \"tennis\">Tennis</option>" +
+                    "<option value= \"volleyball\">Volleyball</option>" +
+                    "<option value= \"wrestling\">Wrestling</option>" +
+                    "<option value= \"soccer\">Soccer</option>" +
+                    "<option value= \"cheer\">Cheer/Competitive Dance</option>" +
+                    "<option value= \"other\">Other</option>";
+
+                break;
+            case "arts":
+                thing2.innerHTML =
+                    "<option value= \"orchestra\">Orchestra</option>" +
+                    "<option value= \"band\">Band</option>" +
+                    "<option value= \"drama\">Drama</option>" +
+                    "<option value= \"choir\">Choir</option>" +
+                    "<option value= \"dance\">Theatre Dance</option>" +
+                    "<option value= \"other\">Other</option>";
+                break;
+            case "academics":
+                thing2.innerHTML =
+                    "<option value= \"tutoring\">Tutoring</option>" +
+                    "<option value= \"ACT\">ACT</option>" +
+                    "<option value= \"SAT\">SAT</option>" +
+                    "<option value = \"assembly\">Assembly</option>" +
+                    "<option value= \"other\">Other</option>";
+                break;
+            case "miscellaneous":
+                thing2.innerHTML =
+                    "<option value= \"dance\">School Dance</option>" +
+                    "<option value= \"pepRally\">Pep Rally</option>" +
+                    "<option value= \"clubMeeting\">Club Meeting</option>" +
+                    "<option value= \"other\">Other</option>";
+                break;
+        }
+    }
+
+
+
+
+    var validateForm = function() {
+
+        var requiredData = document.getElementsByClassName('requiredData');
+        var alertedOnce = false;
+        for (var i = 0; i < requiredData.length; i++) {
+            requiredData[i].style.borderColor = "gray";
+            //console.log(inputData[i].value);
+            if (requiredData[i].value === null || requiredData[i].value === "") {
+
+                requiredData[i].style.borderColor = "red";
+                if (!alertedOnce) {
+                    // eslint-disable-next-line no-alert
+                    alert("Make Sure you fill in all required data");
+                    alertedOnce = true;
+                }
+
+
+            }
+        }
+        if (!alertedOnce) {
+            var addEventForm = document.getElementById('addEventForm');
+            addEventForm.submit();
+        }
+
+
+    }
+</script>
+
+<body>
+    <h1 id="logo"><img src="./images/websiteLogo.png" width="823" /></h1>
+    <h1 id="add-event-title">ADD AN EVENT</h1>
+    </br>
+    <form method="POST" action="/home" id="addEventForm">
+        <h3>Event Name:</h3>
+        <input type="text" name="eventName" class="requiredData inputData" />
+        </br>
+        <h3>Category:</h3>
+        <select name="eventCategory" id="category" onchange="writeActivityBox()" class="requiredData inputData">
+            <option style="display:none">
+            <option value="athletics">Athletics</option>
+            <option value="academics">Academics</option>
+            <option value="arts">Arts</option>
+            <option value="miscellaneous">Miscellaneous</option>
+        </select>
+        </br>
+        <h3>Activity:</h3>
+        <select name="eventActivity" id="activity" class="requiredData inputData" value="">
+            <option>Select Category First</option>
+        </select>
+        </br>
+        <h3>Date:</h3>
+        <input type="date" name="eventDate" class="requiredData inputData" />
+        </br>
+        <h3>Time:</h3>
+        <input type="time" name="eventTime" class="inputData" />
+        </br>
+        <h3>Location:</h3>
+        <input type="text" name="location" class="inputData" />
+        </br>
+        <h3> Description:</h3>
+        <textarea id="infoBox" name="eventDescription" class="inputData"></textarea>
+        </br>
+        </br>
+        <h3>Special Event?<input type="checkbox" name="isSpecial" class="inputData" id="check" />
+        </h3>
+        <input type="button" name="typeOfAction" value="Add Event" id="submitButton" onclick="validateForm()">
+        <input type="hidden" name="typePost" value="fromAddEvent" />
+    </form>
+</body>
+
+</html>

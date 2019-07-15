@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Mountie Mobile | View Event</title>
+    <style>
+        #logo {
+            text-align: center;
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        h2 {
+            text-align: center;
+        }
+        
+        #delete-event-button {
+            float: right;
+        }
+        
+        #edit-event-button {
+            float: left;
+        }
+        
+        #eventTitle {
+            font-size: 40px;
+            position: static;
+        }
+        
+        .eventData {
+            font-size: 20px;
+            padding-left: 40px;
+        }
+        
+        .inputData#date {
+            background-color: white;
+        }
+        
+        .inputData#description {
+            width: 400px;
+            height: 100px;
+            resize: none;
+        }
+        
+        .inputData {
+            border-width: 0;
+            outline: 0;
+            font-size: 15px;
+            color: black;
+        }
+        
+        .editButton {
+            width: 15px;
+        }
+        
+        input#makeChangesButton {
+            width: 150px;
+            border-color: blue;
+            border-radius: 10px;
+            transition: width 1s;
+        }
+        
+        input#makeChangesButton:hover {
+            width: 200px;
+        }
+        
+        #name-change {
+            display: none;
+        }
+        
+        .inputData#time {
+            background-color: white;
+        }
+    </style>
+
+    <script>
+        var inputData = [];
+        window.onload = function() {
+            inputData = document.getElementsByClassName('inputData');
+            writeActivityBox();
+            setSelectedActivity('bowling');
+        }
+
+        var makeEventsEditable = function() {
+            for (let i = 0; i < inputData.length; i++) {
+                inputData[i].style.borderWidth = '1px';
+                inputData[i].style.outline = '1';
+                inputData[i].disabled = false;
+                inputData[i].readOnly = false;
+            }
+            var z = document.getElementById('makeChangesButton');
+            z.hidden = false;
+            var x = document.getElementById('name-change');
+
+
+            x.style.display = "initial"
+
+        }
+
+        var confirmDeletion = function() {
+            // eslint-disable-next-line no-alert
+            var cD = confirm("Are you sure you want to delete this event?");
+            if (cD) {
+                var d = document.getElementById('delete-event-form');
+                d.submit();
+            }
+
+        }
+
+        var validateForm = function() {
+
+            var requiredData = document.getElementsByClassName('required');
+            var alertedOnce = false;
+            for (var i = 0; i < requiredData.length; i++) {
+                requiredData[i].style.borderColor = "gray";
+                //console.log(inputData[i].value);
+                if (requiredData[i].value === null || requiredData[i].value === "") {
+
+                    requiredData[i].style.borderColor = "red";
+                    if (!alertedOnce) {
+                        // eslint-disable-next-line no-alert
+                        alert("Make Sure you fill in all required data");
+                        alertedOnce = true;
+                    }
+
+
+                }
+            }
+            if (!alertedOnce) {
+                var makeChangesForm = document.getElementById('makeChangesForm');
+                makeChangesForm.submit();
+            }
+
+
+        }
+
+        var setSelectedActivity = function(selectedActivity) {
+            var allOpts = document.getElementsByTagName('option');
+
+            for (let i = 0; i < allOpts.length; i++) {
+                if (allOpts[i].value === selectedActivity) {
+                    allOpts[i].selected = 'true';
+                }
+            }
+        }
+
+        var writeActivityBox = function(firstTime) {
+
+            var thing2 = document.getElementById("activity");
+            //thing2.innerHTML = "<option style=\"display:none\">";
+            switch (document.getElementById("category").value) {
+                case "athletics":
+                    thing2.innerHTML = "<option value= \"baseball\">Baseball</option>" +
+                        "<option value= \"basketball\">Basketball</option>" +
+                        "<option value= \"bowling\">Bowling</option>" +
+                        "<option value= \"cross country\">Cross Country</option>" +
+                        "<option value= \"football\">Football</option>" +
+                        "<option value= \"golf\">Golf</option>" +
+                        "<option value= \"track and field\">Track and Field</option>" +
+                        "<option value= \"tennis\">Tennis</option>" +
+                        "<option value= \"volleyball\">Volleyball</option>" +
+                        "<option value= \"wrestling\">Wrestling</option>" +
+                        "<option value= \"soccer\">Soccer</option>" +
+                        "<option value= \"other\">Other</option>";
+
+                    break;
+                case "arts":
+                    thing2.innerHTML =
+                        "<option value= \"orchestra\">Orchestra</option>" +
+                        "<option value= \"band\">Band</option>" +
+                        "<option value= \"drama\">Drama</option>" +
+                        "<option value= \"choir\">Choir</option>" +
+                        "<option value= \"dance\">Dance</option>" +
+                        "<option value= \"other\">Other</option>";
+                    break;
+                case "academics":
+                    thing2.innerHTML =
+                        "<option value= \"tutoring\">Tutoring</option>" +
+                        "<option value= \"ACT\">ACT</option>" +
+                        "<option value= \"SAT\">SAT</option>" +
+                        "<option value = \"assembly\">Assembly</option>" +
+                        "<option value= \"other\">Other</option>";
+                    break;
+                case "other":
+                    thing2.innerHTML =
+                        "<option value= \"dance\">Dance</option>" +
+                        "<option value= \"pepRally\">Pep Rally</option>" +
+                        "<option value= \"other\">Other</option>";
+                    break;
+            }
+
+
+        }
+    </script>
+</head>
+
+
+<body>
+    <h1 id="logo"><img src="./images/websiteLogo.png" width="823px" /></h1>
+    <form method="POST" id="delete-event-form" action="/delete" hidden="true">
+    </form>
+    <input type="image" id="delete-event-button" src="./images/delete-event-button.png" width="200px" onclick="confirmDeletion()" />
+
+
+    <input onclick="makeEventsEditable()" id="edit-event-button" type="image" src="./images/edit-event-button.png" width="200px" />
+
+    <h1 id="eventTitle">Event Name</h1>
+    </br>
+    </br>
+
+
+
+
+    <form id="makeChangesForm" method="POST" action="/home">
+        <div id="name-change">
+            <h3>Changed Event Name:</h3>
+            <span class="eventData">
+                            <input id="name"  name = "name" type="text" class="inputData required" />
+                    </span>
+
+        </div>
+
+
+        <h3>Category: </h3>
+
+
+        <span class="eventData">
+                    <select  name = "category"  class="inputData required" disabled=true id = "category" onchange = "writeActivityBox()">
+                        <option value = "athletics">Athletics</option>
+                        <option value = "arts">Arts</option>
+                        <option value = "other">Other</option>
+                        <option value = "academics" >Academics</option>
+                    </select>
+                </span>
+
+
+
+        </br>
+
+
+        <h3>Activity: </h3>
+
+        <span class="eventData">
+                        <select  name = "activity"  class="inputData required" disabled=true id="activity">
+                            <option value = "golf">Golf</option>
+                        </select>
+                </span>
+
+
+
+        </br>
+        <h3>Date: </h3>
+
+
+        <span class="eventData">
+                    <input type = "date"  name = "date" class = "inputData required" id="date" disabled = true/>
+                </span>
+
+
+
+
+        </br>
+        <h3>Time: </h3>
+
+        <span class="eventData">
+             <input type = "time"  name = "time" class = "inputData" id="time" disabled = true/>
+        </span>
+
+        </br>
+        <h3>Location: </h3>
+
+
+        <span class="eventData">
+                        <input type = "text"  name = "location" class = "inputData" readonly="true" value="locationPlace"/>
+                </span>
+
+
+
+        </br>
+        <h3>Description: </h3>
+        <span class="eventData">
+                       <textarea class = "inputData" name = "description" id = "description" readonly = true></textarea>
+                </span>
+    </form>
+
+
+
+
+
+    </br>
+    <h3>Updated On: </h3>
+    <p class='eventData'>IDK MOFO</p>
+    </br>
+    <h3>Special? : <input type="checkbox" id="isSpecial" class="inputData" disabled="true" /></h3>
+    <input id='makeChangesButton' hidden="true" type="button" value="Make Changes" onclick="validateForm()" />
+
+</body>
+
+
+</html>

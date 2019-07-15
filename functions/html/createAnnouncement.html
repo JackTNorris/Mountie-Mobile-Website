@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<title>Create Announcement</title>
+<style>
+    h1 {
+        text-align: center;
+        font-size: 40px;
+    }
+    
+    #announcementFillBox {
+        text-align: center;
+    }
+    
+    textarea {
+        resize: none;
+        width: 630px;
+        height: 295px;
+        border-radius: 5px;
+        border-color: blue;
+        outline: none;
+    }
+    
+    input {
+        width: 200px;
+        border-radius: 10px;
+        border-color: green;
+        transition: 1s width;
+    }
+    
+    input:hover {
+        width: 300px;
+    }
+</style>
+
+<body>
+    <h1 id="logo"><img src="./images/websiteLogo.png" width="823" class="topStuff" /></h1>
+    <h1>Create Announcement</h1>
+    <form id="announcementFillBox" method="POST" action="/createAnnouncement">
+        <textarea name="message"></textarea>
+        </br>
+        </br>
+        <input type="submit" value="Create Announcement" />
+    </form>
+
+
+</body>
+
+</html>

@@ -1,0 +1,1 @@
+for(var i = 0; i < j.length; i++){console.log("\"<option value= \\\"" + j[i].toLowerCase() + "\\\">" + j[i] + "</option>\"" + " + ");}

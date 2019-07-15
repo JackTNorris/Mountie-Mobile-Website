@@ -1,0 +1,20 @@
+{
+
+    "rules": {
+
+        "users": {
+            "$uid": {
+                ".read": false,
+                ".write": false
+            }
+        },
+        "events": {
+            ".read": true,
+            ".write": false
+        },
+        "announcements": {
+            ".read": true,
+            ".write": false
+        }
+    }
+}
