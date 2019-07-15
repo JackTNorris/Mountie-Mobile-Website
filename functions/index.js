@@ -951,7 +951,7 @@ var renderEventView = function(res, eventName) {
                         res.write("                        \"<option value= \\\"band\\\">Band</option>\" +\n");
                         res.write("                        \"<option value= \\\"drama\\\">Drama</option>\" +\n");
                         res.write("                        \"<option value= \\\"choir\\\">Choir</option>\" +\n");
-                        res.write("                        \"<option value= \\\"dance\\\">Theatre Dance</option>\" +\n");
+                        res.write("                        \"<option value= \\\"theatre dance\\\">Theatre Dance</option>\" +\n");
                         res.write("                        \"<option value= \\\"other\\\">Other</option>\";\n");
                         res.write("                    break;\n");
                         res.write("                case \"academics\":\n");
@@ -964,7 +964,7 @@ var renderEventView = function(res, eventName) {
                         res.write("                    break;\n");
                         res.write("                case \"miscellaneous\":\n");
                         res.write("                    thing2.innerHTML =\n");
-                        res.write("                        \"<option value= \\\"dance\\\">Dance</option>\" +\n");
+                        res.write("                        \"<option value= \\\"school dance\\\">School Dance</option>\" +\n");
                         res.write("                        \"<option value= \\\"pep rally\\\">Pep Rally</option>\" +\n");
                         res.write("                        \"<option value= \\\"club meeting\\\">Club Meeting</option>\" +\n");
                         res.write("                        \"<option value= \\\"other\\\">Other</option>\";\n");
