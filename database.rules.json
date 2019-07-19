@@ -15,6 +15,10 @@
         "announcements": {
             ".read": true,
             ".write": false
+        },
+        "appusers": {
+            ".read": true,
+            ".write": true
         }
     }
 }

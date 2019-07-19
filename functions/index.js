@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+
 var firebase = require("firebase/app");
 //calendar view + 
 // Add the Firebase products that you want to use
@@ -30,8 +31,17 @@ var ref = db.ref('/events');
 var cookieParser = require('cookie-parser');
 var aRef = db.ref('/announcements');
 
+var userRefThing = db.ref('/appusers');
+userRefThing.child("Test").set({
+    token: "hi"
+})
 
-
+var registrationTokens = [
+    'cazSVnJoBjs:APA91bFfm78t27ZeLVcXu3YLQDmUcUBKLXxqsD2gJXKkJAFKKCe0_D8Vyodjx7ggppm5pXyTaMLnn0J9_SnP4f0tqn6TnMEuUNgBK'
+  ];
+  
+  // See the "Defining the message payload" section below for details
+  // on how to define a message payload.
 
 
 /*
@@ -106,6 +116,30 @@ app.post('/createAnnouncement', (req, res) => {
         message: req.body.message.toString(),
         dateEntered: new Date().getTime()
     });
+
+    //Delete later
+    var payload = {
+        notification: {
+          title: 'New Announcement',
+          body: req.body.message.toString()
+        }
+      };
+      
+      
+      // Send a message to the devices corresponding to the provided
+      // registration tokens.
+      admin.messaging().sendToDevice(registrationTokens, payload)
+        .then(function(response) {
+          // See the MessagingDevicesResponse reference documentation for
+          // the contents of response.
+          console.log('Successfully sent message:', response);
+          return "";
+        })
+        .catch(function(error) {
+          console.log('Error sending message:', error);
+        });
+
+    //deleteLater
     res.redirect('/home');
 })
 
@@ -1254,3 +1288,9 @@ var rEventView = function(res, eventName) {
 
 
 exports.app = functions.https.onRequest(app); //exports this as my nodeJs backend, so now crap worksys
+/*
+exports.scheduledFunctionPlainEnglish =
+functions.pubsub.schedule('every 2 minutes').onRun((context) => {
+    console.log('This will be run every 2 minutes!');
+});
+*/
