@@ -32,16 +32,20 @@ var cookieParser = require('cookie-parser');
 var aRef = db.ref('/announcements');
 
 var userRefThing = db.ref('/appusers');
-userRefThing.child("Test").set({
-    token: "hi"
-})
 
-var registrationTokens = [
-    'cazSVnJoBjs:APA91bFfm78t27ZeLVcXu3YLQDmUcUBKLXxqsD2gJXKkJAFKKCe0_D8Vyodjx7ggppm5pXyTaMLnn0J9_SnP4f0tqn6TnMEuUNgBK'
-  ];
-  
-  // See the "Defining the message payload" section below for details
-  // on how to define a message payload.
+
+let registrationTokens = [];
+
+exports.tokenUpdater = userRefThing.on("child_added", (snapshot, prevChildKey) => {
+    let g = snapshot.val();
+    console.log(g.info.token)
+    registrationTokens.push(g.info.token);
+});
+
+
+
+// See the "Defining the message payload" section below for details
+// on how to define a message payload.
 
 
 /*
@@ -93,6 +97,11 @@ app.post('/deleteAnnouncement', (req, res) => {
 });
 
 
+app.get('/dacronjobyo', (req, res) => {
+    console.log("Cron Job Ran Dude!!!");
+    res.end();
+})
+
 app.get('/createAnnouncement', (req, res) => {
     if (req.cookies.__session) {
         admin.auth().verifyIdToken(req.cookies.__session.toString())
@@ -120,23 +129,23 @@ app.post('/createAnnouncement', (req, res) => {
     //Delete later
     var payload = {
         notification: {
-          title: 'New Announcement',
-          body: req.body.message.toString()
+            title: 'New Announcement',
+            body: req.body.message.toString()
         }
-      };
-      
-      
-      // Send a message to the devices corresponding to the provided
-      // registration tokens.
-      admin.messaging().sendToDevice(registrationTokens, payload)
-        .then(function(response) {
-          // See the MessagingDevicesResponse reference documentation for
-          // the contents of response.
-          console.log('Successfully sent message:', response);
-          return "";
+    };
+
+
+    // Send a message to the devices corresponding to the provided
+    // registration tokens.
+    admin.messaging().sendToDevice(registrationTokens, payload)
+        .then((response) => {
+            // See the MessagingDevicesResponse reference documentation for
+            // the contents of response.
+            console.log('Successfully sent message:', response);
+            return "";
         })
-        .catch(function(error) {
-          console.log('Error sending message:', error);
+        .catch((error) => {
+            console.log('Error sending message:', error);
         });
 
     //deleteLater
@@ -1102,12 +1111,12 @@ var renderEventView = function(res, eventName) {
                         res.write("    <span class=\"eventData\">\n");
                         res.write("                       <textarea class = \"inputData\" name = \"description\" id = \"description\" readonly = true>" + chosenEvent.description.toString() + "</textarea>\n");
                         res.write("                </span>\n");
-                        res.write("<h3>Special Event?:  <input type = \"checkbox\" class = \"inputData\" disabled = true name = \"isSpecial\" " + (chosenEvent.isSpecial ? "checked" : "") +  " /> </h3>")
+                        res.write("<h3>Special Event?:  <input type = \"checkbox\" class = \"inputData\" disabled = true name = \"isSpecial\" " + (chosenEvent.isSpecial ? "checked" : "") + " /> </h3>")
                         res.write("\n</br>\n")
                         res.write("</form>\n");
                         res.write("\n");
                         res.write("\n");
-                        
+
                         res.write("\n");
                         res.write("\n");
                         res.write("\n");
