@@ -144,6 +144,10 @@
         #thing1 {
             background-color: 'white';
         }
+        
+        #adminLink {
+            text-align: right;
+        }
     </style>
 
     <script>
@@ -195,8 +199,13 @@
     <div id="catSelect">
         <ul>
             <li id="academicFilter"><input type="image" onclick="writeEventTable(this)" src="./images/academicsFilter.png" id="academicsFilter" class="filterButtons" /></li>
-            <li><input type="image" onclick="writeEventTable(this)" src="./images/artsFilter.png" id="artsFilter" class="filterButtons" /></li>
-            <li><input type="image" onclick="writeEventTable(this)" src="./images/athleticsFilter.png" id="athleticsFilter" class="filterButtons" /></li>
+            <li>
+                <input type="image" onclick="writeEventTable(this)" src="./images/artsFilter.png" id="artsFilter" class="filterButtons" />
+                <p>Arts</p>
+            </li>
+            <li><input type="image" onclick="writeEventTable(this)" src="./images/athleticsFilter.png" id="athleticsFilter" class="filterButtons" />
+                <p>Arts</p>
+            </li>
             <li><input type="image" onclick="writeEventTable(this)" src="./images/otherFilter.png" id="otherFilter" class="filterButtons" /></li>
         </ul>
     </div>
@@ -246,7 +255,9 @@
         </table>
     </div>
 
-
+    <a href="addEvent.html">
+        <p id="adminLink">For Administrators</p>
+    </a>
 
 
     <!--New Stuff-->

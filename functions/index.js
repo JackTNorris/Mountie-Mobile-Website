@@ -99,6 +99,96 @@ app.post('/deleteAnnouncement', (req, res) => {
 
 app.get('/dacronjobyo', (req, res) => {
     console.log("Cron Job Ran Dude!!!");
+    let specificNotificationTokens = [];
+    let eventRef = db.ref('/events');
+    eventRef.once('value', (dataSnapshot) => {
+        dataSnapshot.forEach((category) => { //this loop loops through each category
+            category.forEach((event) => { //this loop loops through each event
+                let today = new Date();
+                today.setHours(today.getHours() - 5); //this adjusts things so that this function executes @ 12:00 CDT
+                let tempDate = new Date(event.val().date);
+                today.setDate(today.getDate() + 1); //in essence, after this step, the today var is now one day after today
+                if (today.getMonth() === tempDate.getMonth() && today.getDate() === tempDate.getDate()) {
+                    let eventCategory = event.val().category;
+                    let eventActivity = event.val().activity;
+                    let appUsersRef = db.ref('/appusers');
+                    appUsersRef.once('value', (snapshot) => {
+                        let usersToSendTo = [];
+                        snapshot.forEach((user) => {
+                            if (user.val().notificationsPreferences) {
+                                let notifArray = []; //a boolean array of all the types of activities the student wants to be notified of
+                                let eventTypes = [];
+                                switch (eventCategory) {
+                                    case 'athletics':
+                                        eventTypes = [
+                                            'Baseball',
+                                            'Football',
+                                            'Basketball',
+                                            'Bowling',
+                                            'Golf',
+                                            'Track and Field',
+                                            'Cross Country',
+                                            'Tennis',
+                                            'Wrestling',
+                                            'Volleyball',
+                                            'Soccer',
+                                            'Cheer/Competitive Dance', //had to shorten this from Cheer/Competitive dance b/c this is what I have in the DB
+                                        ];
+                                        user.val().notificationsPreferences.athleticsNotif.forEach((item) => {
+
+                                            notifArray.push(item);
+                                        })
+                                        break;
+                                    case 'arts':
+                                        eventTypes = ['Choir', 'Orchesra', 'Band', 'Drama', 'Theatre Dance'];
+                                        user.val().notificationsPreferences.artsNotif.forEach((item) => {
+                                            notifArray.push(item);
+                                        })
+                                        break;
+                                    case 'academics':
+                                        eventTypes = ['Tutoring', 'ACT', 'SAT', 'Assembly'];
+                                        user.val().notificationsPreferences.academicsNotif.forEach((item) => {
+                                            notifArray.push(item);
+                                        })
+                                        break;
+                                    case 'miscellaneous':
+                                        eventTypes = ['Pep Rally', 'School Dance', 'Club Meeting'];
+                                        user.val().notificationsPreferences.miscellaneousNotif.forEach((item) => {
+                                            notifArray.push(item);
+                                        });
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                eventTypes.sort();
+                                for (let i = 0; i < eventTypes.length; i++) {
+                                    if (eventTypes[i].toLowerCase() === eventActivity && notifArray[i] === true) {
+                                        //left off here
+                                        usersToSendTo.push(user.key);
+                                    }
+                                }
+                            }
+                        }); //end of foreach
+
+                        let payload = {
+                            notification: {
+                                title: event.val().name + " " + "Tommorrow at " + tempDate.getHours() + ":" + tempDate.getMinutes(),
+                                body: event.val().description //payload is the second argument of send to device, it contains notificaiotn and other settings
+                            }
+                        }
+                        admin.messaging().sendToDevice(usersToSendTo, payload).then(() => {
+                            console.log("All devices have been notified!");
+                            console.log("Date I think is today: " + new Date().toString());
+                            return "";
+                        }).catch((error) => {
+                            console.log(error.message);
+                        });
+
+                    }); //
+                }
+            })
+        })
+    })
     res.end();
 })
 
@@ -286,8 +376,8 @@ app.post('/viewEvent', (req, res) => {
 app.get('/home', (req, res) => {
     if (req.cookies.__session) {
         admin.auth().verifyIdToken(req.cookies.__session.toString())
-            .then(() => {
-                renderHome(res);
+            .then((decodedToken) => {
+                renderHome(res, decodedToken);
                 return "";
             })
             .catch((error) => {
@@ -307,7 +397,7 @@ app.post('/home', (req, res) => {
         case 'fromLogin': //this part of my code receives the idToken passed to it from the front end. it then validates it and stores it in a cookie
             admin.auth().verifyIdToken(req.body.authToken.toString())
                 .then((decodedToken) => {
-                    var uid = decodedToken.uid;
+                    //var uid = decodedToken.uid;
                     //console.log(uid);
                     var expDate = new Date();
 
@@ -355,7 +445,7 @@ app.post('/home', (req, res) => {
                         updatedOn: today.toDateString()
                     })
 
-                    renderHome(res);
+                    renderHome(res, decodedToken);
                     //res.end();
                     return decodedToken;
                 })
@@ -389,7 +479,7 @@ app.post('/home', (req, res) => {
 
 
 
-var renderHome = function(res) {
+var renderHome = function(res, decodedToken) {
     var eventList = [];
     var athleticEvents = [];
     var academicEvents = [];
@@ -397,45 +487,63 @@ var renderHome = function(res) {
     var artsEvents = [];
     var announcements = [];
     var announcementPaths = [];
-
+    let uid = decodedToken.uid;
+    let uidIsAdmin = false;
     var athleticsRef = db.ref('/events/athletics').orderByChild('date');
     var artsRef = db.ref('/events/arts').orderByChild('date');
     var academicsRef = db.ref('/events/academics').orderByChild('date');
     var miscellaneousRef = db.ref('/events/miscellaneous').orderByChild('date');
+    var adminUsersRef = db.ref('/adminUsers');
 
     var announcementsRef = db.ref('/announcements').orderByChild('dateEntered');
+    let checkUID = adminUsersRef.once('value', (snapshot) => {
+        uidIsAdmin = snapshot.hasChild(uid);
+    });
 
-    announcementsRef.once('value', (data) => {
+    let getAnnouncements = announcementsRef.once('value', (data) => {
         data.forEach((element) => {
             announcements.unshift(element.val());
             announcementPaths.unshift(element.key.toString());
             console.log(element.key.toString());
         })
     })
-    artsRef.once("value", (data) => {
+    let getArts = artsRef.once("value", (data) => {
         data.forEach((element) => {
             artsEvents.push(element.val());
         })
     })
-    academicsRef.once("value", (data) => {
+    let getAcademics = academicsRef.once("value", (data) => {
             data.forEach((element) => {
                 academicEvents.push(element.val());
             })
 
         }) //
-    miscellaneousRef.once("value", (data) => {
+    let getMiscellaneous = miscellaneousRef.once("value", (data) => {
             data.forEach((element) => {
                 miscellaneousEvents.push(element.val());
             })
 
         }) //
-    athleticsRef.once("value", (data) => {
+    Promise.all([getAnnouncements, getAcademics, getArts, getMiscellaneous, checkUID]).then(() => { //this executes when all the data is retrieved => this effectively ensures there's a promise for every single DB refernce
+
+        return "";
+    }).catch((error) => {
+
+    });
+    let getAthletics = athleticsRef.once("value", (data) => {
             data.forEach((element) => {
                 athleticEvents.push(element.val());
             })
 
         }) //
+
+    Promise.all([getAnnouncements, getAcademics, getArts, getMiscellaneous, getAthletics])
         .then(() => {
+            if (uidIsAdmin) {
+                console.log("This user is an administrator");
+            } else {
+                console.log("Not an administrator");
+            }
             res.write("<!DOCTYPE html>");
             res.write("<html>");
             res.write("<head>");
@@ -718,10 +826,10 @@ var renderHome = function(res) {
             res.write("");
             res.write("<div id=\"catSelect\">\n");
             res.write("    <ul>\n");
-            res.write("        <li id=\"academicFilter\"><input type=\"image\" onclick=\"writeEventTable(this)\" src=\"./images/academicsFilter.png\" id=\"academicsFilter\" class=\"filterButtons\" /></li>\n");
-            res.write("        <li><input type=\"image\" onclick=\"writeEventTable(this)\" src=\"./images/artsFilter.png\" id=\"artsFilter\" class=\"filterButtons\" /></li>\n");
-            res.write("        <li><input type=\"image\" onclick=\"writeEventTable(this)\" src=\"./images/athleticsFilter.png\" id=\"athleticsFilter\" class=\"filterButtons\" /></li>\n");
-            res.write("        <li><input type=\"image\" onclick=\"writeEventTable(this)\" src=\"./images/miscellaneousFilter.png\" id=\"miscellaneousFilter\" class=\"filterButtons\" /></li>\n");
+            res.write("        <li id=\"academicFilter\"><input type=\"image\" onclick=\"writeEventTable(this)\" src=\"./images/academicsFilter.png\" id=\"academicsFilter\" class=\"filterButtons\" /><p>Academics</p></li>\n");
+            res.write("        <li><input type=\"image\" onclick=\"writeEventTable(this)\" src=\"./images/artsFilter.png\" id=\"artsFilter\" class=\"filterButtons\" /><p>Arts</p></li>\n");
+            res.write("        <li><input type=\"image\" onclick=\"writeEventTable(this)\" src=\"./images/athleticsFilter.png\" id=\"athleticsFilter\" class=\"filterButtons\" /><p>Athletics</p></li>\n");
+            res.write("        <li><input type=\"image\" onclick=\"writeEventTable(this)\" src=\"./images/miscellaneousFilter.png\" id=\"miscellaneousFilter\" class=\"filterButtons\" /><p>Miscellaneous</p></li>\n");
             res.write("    </ul>\n");
             res.write("</div>\n");
             res.write("<div id=\"eventList\">");
@@ -788,6 +896,10 @@ var renderHome = function(res) {
             res.write("\n");
             res.write("    </table>\n");
             res.write("</div>\n");
+            res.write('<a href="addEvent.html">\n');
+            res.write('<p id="adminLink">For Administrators</p>\n')
+            res.write(' </a>\n')
+
             res.write("<form type = \"hidden\" method = \"POST\" action = \"/deleteAnnouncement\" id = \"deleteAnnouncementForm\">\n");
             res.write("    <input type = \"hidden\" name = \"announcementPath\" value = \"\" id = \"deleteAnnouncementPath\"/>\n");
             res.write("\n");
@@ -809,6 +921,12 @@ var renderHome = function(res) {
         });
 
 }
+
+var renderEventQueue = function(res) {
+
+}
+
+
 
 
 
@@ -984,7 +1102,7 @@ var renderEventView = function(res, eventName) {
                         res.write("                        \"<option value= \\\"volleyball\\\">Volleyball</option>\" +\n");
                         res.write("                        \"<option value= \\\"wrestling\\\">Wrestling</option>\" +\n");
                         res.write("                        \"<option value= \\\"soccer\\\">Soccer</option>\" +\n");
-                        res.write("                        \"<option value= \\\"cheer\\\">Cheer/Competitive Dance</option>\" +\n");
+                        res.write("                        \"<option value= \\\"cheer/competitive dance\\\">Cheer/Competitive Dance</option>\" +\n");
                         res.write("                        \"<option value= \\\"other\\\">Other</option>\";\n");
                         res.write("\n");
                         res.write("                    break;\n");
