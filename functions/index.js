@@ -281,7 +281,22 @@ app.get('/login', (req, res) => {
 });
 
 
-
+app.get('/viewQueue', (req, res) => {
+    if (req.cookies.__session) {
+        admin.auth().verifyIdToken(req.cookies.__session.toString())
+            .then((decodedToken) => {
+                //res.send("CONGRATS, YOU ADMIN BRUH");
+                renderQueue(res, decodedToken);
+                return "";
+            })
+            .catch((error) => {
+                console.log(error.message);
+                res.redirect('/login');
+            })
+    } else {
+        res.redirect('/login');
+    }
+});
 
 
 app.post('/deleteEvent', (req, res) => {
@@ -309,37 +324,6 @@ var cleanse4FB = function(key) {
     return finalString;
 }
 
-/*
-app.post('/login', (req, res) => {
-    admin.auth().verifyIdToken(req.body.authToken.toString())
-        .then((decodedToken) => {
-
-            var uid = decodedToken.uid;
-            //console.log(uid);
-            var expDate = new Date();
-
-            res.set('Set-Cookie', `userToken=${req.body.authToken.toString()};`)
-
-            res.send("SUCCESS BOOOOOOOOIIIIIIII!" + "\n" + req.cookies['userToken'].toString());
-
-
-
-            return decodedToken;
-            // ...
-        })
-        .catch((error) => {
-            // Handle error
-            res.send("FAILURE");
-
-            console.log(error.message);
-        });
-
-    //res.send("\"" + req.body.user.toString() + "\\\"");
-    //res.send('hello');
-
-});
-
-*/
 
 app.get('/addEvent', (req, res) => {
     if (req.cookies.__session) {
@@ -428,22 +412,31 @@ app.post('/home', (req, res) => {
             admin.auth().verifyIdToken(req.cookies.__session.toString()) //function that verifies my id token
                 .then((decodedToken) => {
                     var today = new Date();
-                    ref = db.ref('/events/' + req.body.eventCategory.toString());
-                    let checkTime = '';
-                    if (req.body.eventTime.toString() !== '' && req.body.eventTime.toString() !== null) {
-                        checkTime = 'T' + req.body.eventTime.toString();
-                    }
-                    ref.child(cleanse4FB(req.body.eventName.toString())).set({
-                        name: req.body.eventName.toString(),
-                        category: req.body.eventCategory.toString(),
-                        activity: req.body.eventActivity.toString(),
-                        date: req.body.eventDate.toString() + checkTime,
-                        location: req.body.location.toString(),
-                        //time: req.body.eventTime.toString(),
-                        description: req.body.eventDescription.toString(),
-                        isSpecial: (req.body.isSpecial) ? true : false,
-                        updatedOn: today.toDateString()
+                    let uidIsAdmin = false;
+                    db.ref('/adminUsers').once('value', (dataSnapshot) => {
+                        if (dataSnapshot.hasChild(decodedToken.uid)) {
+                            ref = db.ref('/events/' + req.body.eventCategory.toString());
+                        } else {
+                            ref = db.ref('/eventQueue');
+                        }
+
+                        let checkTime = '';
+                        if (req.body.eventTime.toString() !== '' && req.body.eventTime.toString() !== null) {
+                            checkTime = 'T' + req.body.eventTime.toString();
+                        }
+                        ref.child(cleanse4FB(req.body.eventName.toString())).set({
+                            name: req.body.eventName.toString(),
+                            category: req.body.eventCategory.toString(),
+                            activity: req.body.eventActivity.toString(),
+                            date: req.body.eventDate.toString() + checkTime,
+                            location: req.body.location.toString(),
+                            //time: req.body.eventTime.toString(),
+                            description: req.body.eventDescription.toString(),
+                            isSpecial: (req.body.isSpecial) ? true : false,
+                            updatedOn: today.toDateString()
+                        });
                     })
+
 
                     renderHome(res, decodedToken);
                     //res.end();
@@ -524,12 +517,7 @@ var renderHome = function(res, decodedToken) {
             })
 
         }) //
-    Promise.all([getAnnouncements, getAcademics, getArts, getMiscellaneous, checkUID]).then(() => { //this executes when all the data is retrieved => this effectively ensures there's a promise for every single DB refernce
 
-        return "";
-    }).catch((error) => {
-
-    });
     let getAthletics = athleticsRef.once("value", (data) => {
             data.forEach((element) => {
                 athleticEvents.push(element.val());
@@ -537,7 +525,7 @@ var renderHome = function(res, decodedToken) {
 
         }) //
 
-    Promise.all([getAnnouncements, getAcademics, getArts, getMiscellaneous, getAthletics])
+    Promise.all([getAnnouncements, getAcademics, getArts, getMiscellaneous, getAthletics, checkUID])
         .then(() => {
             if (uidIsAdmin) {
                 console.log("This user is an administrator");
@@ -679,7 +667,7 @@ var renderHome = function(res, decodedToken) {
             res.write("tr.announcements:hover {\n");
             res.write("cursor: auto;\n");
             res.write("}\n");
-
+            res.write("#adminLink{ text-align: right }")
             res.write("    </style>\n");
             res.write("\n");
             res.write("<script>\n");
@@ -853,7 +841,7 @@ var renderHome = function(res, decodedToken) {
                     res.write(" class = 'even' ");
                 }
 
-                res.write(" onclick='viewEvent(this)'" + " value=" + "\"" + cleanseInput(academicEvents[i - 1].name.toString()) + "\"" + ">");
+                res.write(" onclick='viewEvent(this)'" + " value=" + "\"" + cleanseInput(academicEvents[i - 1].name.toString(), true) + "\"" + ">");
 
                 res.write("<td>" + cleanseInput(academicEvents[i - 1].name.toString()) + "</td>");
                 res.write("<td>" + academicEvents[i - 1].category.toString() + "</td>");
@@ -889,16 +877,19 @@ var renderHome = function(res, decodedToken) {
                 }
                 res.write(">");
                 res.write("<td>" + announcements[i - 1].message.toString() + "</td>");
-                res.write("<td class = 'deleteAnnouncementButtons'><input onClick = \"deleteAnnouncement('" + announcementPaths[i - 1] + "')\"" + " id='deleteAnnouncementButton' type='image' src='./images/deleteAnnouncementButton.png' width='15px'/></td>")
+                res.write("<td class = 'deleteAnnouncementButtons'><input onClick = \"deleteAnnouncement('" + announcementPaths[i - 1] + "')\"" + " id='deleteAnnouncementButton' type='image' src='./images/deleteButton.png' width='15px'/></td>")
                 res.write("</tr>");
             }
 
             res.write("\n");
             res.write("    </table>\n");
             res.write("</div>\n");
-            res.write('<a href="addEvent.html">\n');
-            res.write('<p id="adminLink">For Administrators</p>\n')
-            res.write(' </a>\n')
+            if (uidIsAdmin) {
+                res.write('<a href="/viewQueue">\n');
+                res.write('<p id="adminLink">For Administrators</p>\n');
+                res.write(' </a>\n');
+            }
+
 
             res.write("<form type = \"hidden\" method = \"POST\" action = \"/deleteAnnouncement\" id = \"deleteAnnouncementForm\">\n");
             res.write("    <input type = \"hidden\" name = \"announcementPath\" value = \"\" id = \"deleteAnnouncementPath\"/>\n");
@@ -922,7 +913,245 @@ var renderHome = function(res, decodedToken) {
 
 }
 
-var renderEventQueue = function(res) {
+var renderQueue = function(res, decodedToken) {
+
+    let uidIsAdmin = false; //using this boolen to determine if the user is an adminstrator
+    let eventQueue = [];
+    let announcementQueue = [];
+    let announcementQueueKeys = [];
+    let uidVerificationPromise = db.ref('/adminUsers').once('value', (dataSnapshot) => { //js api that checks if user is admin using hasChild function
+        if (dataSnapshot.hasChild(decodedToken.uid)) {
+            uidIsAdmin = true;
+        } else {
+            res.redirect('/home');
+        }
+    });
+    let announcementQueuePromise = db.ref('/eventQueue').orderByChild('dateEntered').once('value', (dataSnapshot) => {
+        dataSnapshot.forEach((announcement) => {
+            announcementQueue.push(announcement.val());
+            announcementQueueKeys.push(announcement.key);
+        })
+    })
+    let eventQueuePromise = db.ref('/eventQueue').orderByChild('updatedOn').once('value', (dataSnapshot) => {
+        dataSnapshot.forEach((event) => {
+            eventQueue.push(event.val())
+        })
+    })
+
+    Promise.all([uidVerificationPromise, eventQueuePromise, announcementQueuePromise]).then(() => {
+        res.write("<!DOCTYPE html>\n");
+        res.write("<html>\n");
+        res.write("<title>Mountie Mobile | Queue</title>\n");
+        res.write("\n");
+        res.write("<head>\n");
+        res.write("    <style>\n");
+        res.write("        body {\n");
+        res.write("            margin: none;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        h1 {\n");
+        res.write("            color: blue;\n");
+        res.write("            text-align: center;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        #currentEventsTitle {\n");
+        res.write("            text-align: center;\n");
+        res.write("            font-size: 50px;\n");
+        res.write("            font-family: Verdana, Geneva, Tahoma, sans-serif;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        table {\n");
+        res.write("            width: 800px;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        th {\n");
+        res.write("            text-align: center;\n");
+        res.write("            border-bottom: 2px solid black;\n");
+        res.write("            border-top: 1px solid black;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        tr {\n");
+        res.write("            text-align: center;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        tr.even {\n");
+        res.write("            background-color: rgba(209, 232, 0, 0.544);\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        tr:hover {\n");
+        res.write("            cursor: pointer;color: blue\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        tr.announcements:hover {\n");
+        res.write("            cursor: auto;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        #eventList {\n");
+        res.write("            text-align: center;\n");
+        res.write("            padding-bottom: 60px;\n");
+        res.write("            border-bottom: 2px solid black;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        li#academicFilter {\n");
+        res.write("            margin-left: 0px;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        .filterButtons {\n");
+        res.write("            width: 100px;\n");
+        res.write("            height: 100px;\n");
+        res.write("            transition: all .3s ease-in-out;\n");
+        res.write("            transform: scale(1);\n");
+        res.write("            outline: 0;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        .filterButtons#academicsFilter {\n");
+        res.write("            width: 120px;\n");
+        res.write("            height: 120px;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        .filterButtons#artsFilter {\n");
+        res.write("            width: 120px;\n");
+        res.write("            height: 120px;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        .filterButtons#athleticsFilter {\n");
+        res.write("            padding-bottom: 10px;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        #eventTable {\n");
+        res.write("            padding-bottom: 100px;\n");
+        res.write("            border-bottom: 10px solid black;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        #announcementsTitle {\n");
+        res.write("            text-align: center;\n");
+        res.write("            font-size: 50px;\n");
+        res.write("            font-family: Verdana, Geneva, Tahoma, sans-serif;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        .even.announcements {\n");
+        res.write("            background-color: rgba(235, 180, 52, 0.544);\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        #announcementList {\n");
+        res.write("            margin-bottom: 100px;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        #storeEliminateButton {\n");
+        res.write("            background-color: white;\n");
+        res.write("            width: 30px;\n");
+        res.write("            border-bottom: 0px;\n");
+        res.write("            border-top: 0px;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        .rejectButton:hover {\n");
+        res.write("            -webkit-filter: invert() sepia() saturate(8000%) drop-shadow(3px 3px 5px red);\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        .approveButton:hover {\n");
+        res.write("            -webkit-filter: saturate(8000%) drop-shadow(3px 3px 5px green);\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        tr.announcements:hover {\n");
+        res.write("            color: black;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        .sideButtons {\n");
+        res.write("            background-color: white;\n");
+        res.write("        }\n");
+        res.write("\n");
+        res.write("        #storeApproveButton {\n");
+        res.write("            background-color: white;\n");
+        res.write("            width: 30px;\n");
+        res.write("            border-bottom: 0px;\n");
+        res.write("            border-top: 0px;\n");
+        res.write("        }\n");
+        res.write("    </style>\n");
+        res.write("\n");
+        res.write("</head>\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("<body>\n");
+        res.write("\n");
+        res.write("<h1 id=\"logo\"><img src=\"./images/websiteLogo.png\" width=\"823\" class=\"topStuff\" /></h1>\n");
+        res.write("\n");
+        res.write("</br>\n");
+        res.write("<h2 id='currentEventsTitle'>Potenial Events</h2>\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("<div id='eventList'>\n");
+        res.write("    <table align=\"center\">\n");
+        res.write("        <tr class='even'>\n");
+        res.write("            <th>Event</th>\n");
+        res.write("            <th>Category</th>\n");
+        res.write("            <th>Activity</th>\n");
+        res.write("            <th>Location</th>\n");
+        res.write("            <th>Date & Time</th>\n");
+        res.write("\n");
+        res.write("        </tr>\n");
+        eventQueue.forEach((event) => {
+            res.write("        <tr title=\"" + cleanseInput(event.description, true) + "\"  class=\"data\">\n");
+            res.write("            <td>" + event.name + "</td>\n");
+            res.write("            <td>" + event.category + "</td>\n");
+            res.write("            <td>" + event.activity + "</td>\n");
+
+            res.write("            <td>" + event.location + "</td>\n");
+            res.write("            <td>" + event.date + "</td>\n");
+            res.write("            <td class=\"sideButtons\"><input onclick = 'approveEvent(this)' value = \"" + cleanseInput(event.name, true) + "\" class=\"approveButton\" type=\"image\" src=\"./images/approveButton.png\" width='15px' /></td>\n");
+            res.write("            <td class=\"sideButtons\"><input  onclick = 'rejectEvent(this)' class=\"rejectButton\" type=\"image\" src=\"./images/deleteButton.png\" width='15px' /></td>\n");
+            res.write("        </tr>\n");
+        })
+
+        res.write("\n");
+        res.write("    </table>\n");
+        res.write("</div>\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("<h2 id=\"announcementsTitle\">Potential Announcements</h2>\n");
+        res.write("\n");
+        res.write("<div id='announcementList'>\n");
+        res.write("    <table align=\"center\">\n");
+        res.write("        <tr class='even announcements'>\n");
+        res.write("            <th>Announcement</th>\n");
+        res.write("            <th id=\"storeApproveButton\"></th>\n");
+        res.write("            <th id=\"storeEliminateButton\"></th>\n");
+        res.write("        </tr>\n");
+        res.write("        <tr id=\"RHS Golf vs Heritage\" class=\"data announcements\">\n");
+        res.write("            <td>RHS Golf vs Heritage</td>\n");
+        res.write("            <td class=\"sideButtons\"><input class=\"approveButton\" type=\"image\" src=\"./images/approveButton.png\" width='15px' /></td>\n");
+        res.write("            <td class=\"sideButtons\"><input class=\"rejectButton\" type=\"image\" src=\"./images/deleteButton.png\" width='15px' /></td>\n");
+        res.write("        </tr>\n");
+        res.write("        <tr class='even announcements'>\n");
+        res.write("            <td>RHS Football vs Bentonville</td>\n");
+        res.write("\n");
+        res.write("            <td class=\"sideButtons\"><input class=\"approveButton\" type=\"image\" src=\"./images/approveButton.png\" width='15px' /></td>\n");
+        res.write("            <td class=\"sideButtons\"><input class=\"rejectButton\" type=\"image\" src=\"./images/deleteButton.png\" width='15px' /></td>\n");
+        res.write("        </tr>\n");
+        res.write("    </table>\n");
+        res.write("</div>\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("\n");
+        res.write("</body>\n");
+        res.write("\n");
+        res.write("</html>\n");
+
+        return "";
+    }).then(() => {
+        res.end();
+        return "";
+    }).catch((error) => {
+        console.log(error.message);
+    })
 
 }
 
@@ -1312,101 +1541,7 @@ function formatDate(date) {
 
 
 
-var rEventView = function(res, eventName) {
-    ref = db.ref('/events');
-    ref.orderByChild('/*/date').once('value', (snapshot) => {
-            snapshot.forEach((item) => {
-                item.forEach((thing) => {
-                    let chosenEvent = thing.val();
-                    if (chosenEvent.name === eventName) {
-                        res.write("<!DOCTYPE html>");
-                        res.write("<html>");
-                        res.write("");
-                        res.write("<head>");
-                        res.write("    <title>Mountie Mobile | View Event</title>");
-                        res.write("</head>");
-                        res.write("<style>");
-                        res.write("    #logo {");
-                        res.write("        text-align: center;");
-                        res.write("    }");
-                        res.write("");
-                        res.write("    h1 {");
-                        res.write("        text-align: center;");
-                        res.write("    }");
-                        res.write("");
-                        res.write("    h2 {");
-                        res.write("        text-align: center;");
-                        res.write("    }");
-                        res.write("");
-                        res.write("    #delete-event-button {");
-                        res.write("        float: right;");
-                        res.write("    }");
-                        res.write("");
-                        res.write("    #edit-event-button {");
-                        res.write("        float: left;");
-                        res.write("    }");
-                        res.write("");
-                        res.write("    #eventTitle {");
-                        res.write("        font-size: 40px;");
-                        res.write("    }");
-                        res.write(".eventData {font-size: 20px;padding-left: 40px;}")
-                        res.write("</style>");
-                        res.write("");
-                        res.write("<body>");
-                        res.write("<h1 id=\"logo\"><img src=\"./images/websiteLogo.png\" width=\"823\" /></h1>");
-                        res.write("<form id=\"delete-event-button\" class=\"topStuff\">");
-                        res.write("    <input type=\"image\" src=\"./images/delete-event-button.png\" width=\"200\" />");
-                        res.write("</form>");
-                        res.write("<form id=\"edit-event-button\">");
-                        res.write("    <input type=\"image\" src=\"./images/edit-event-button.png\" width=\"200\" />");
-                        res.write("</form>");
-                        res.write("<h1 id=\"eventTitle\">" + eventName + "</h1>");
-                        res.write("</br>");
-                        res.write("</br>");
-                        res.write("<h3>Category: </h3>");
-                        res.write("<p class = \"eventData\">" + chosenEvent.category.toString() + "</p>");
-                        res.write("</br>");
-                        res.write("<h3>Activity: </h3>");
-                        res.write("<p class = \"eventData\">" + chosenEvent.activity.toString() + "</p>");
-                        res.write("</br>");
-                        var dateTime = new Date(chosenEvent.date.toString());
-                        res.write("<h3>Date: </h3>");
-                        res.write("<p class = \"eventData\">" + dateTime.getMonth() + "/" + dateTime.getDate() + "/" + dateTime.getFullYear() + "</p>");
-                        res.write("</br>");
-                        res.write("<h3>Time: </h3>");
-                        var correctTimeId = "AM";
 
-                        if (dateTime.getUTCHours() / 12 >= 1)
-                            correctTimeId = "PM";
-                        res.write("<p class = \"eventData\">" + dateTime.getUTCHours() % 12 + ":" + dateTime.getUTCMinutes() + correctTimeId + "</p>");
-                        res.write("</br>");
-                        res.write("<h3>Location: </h3>");
-                        res.write("<p class = \"eventData\">" + chosenEvent.location.toString() + "</p>");
-                        res.write("</br>");
-                        res.write("<h3>Description: </h3>");
-                        res.write("<p class = \"eventData\">" + chosenEvent.description.toString() + "</p>");
-                        res.write("</br>");
-                        res.write("<h3>Updated On: </h3>");
-                        if (chosenEvent.updatedOn) {
-                            res.write("<p class = \"eventData\">" + chosenEvent.updatedOn.toString() + "</p>")
-                        }
-                        res.write("</body>");
-                        res.write("");
-                        res.write("");
-                        res.write("</html>");
-                    }
-                })
-            })
-        })
-        .then(() => {
-            res.end();
-            return "";
-        })
-        .catch((error) => {
-            res.redirect('/home');
-            console.log(error.message);
-        });
-}
 
 
 

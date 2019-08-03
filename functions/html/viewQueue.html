@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<title>Mountie Mobile | Home</title>
+
+<head>
+    <style>
+        body {
+            margin: none;
+        }
+        
+        h1 {
+            color: blue;
+            text-align: center;
+        }
+        
+        #currentEventsTitle {
+            text-align: center;
+            font-size: 50px;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+        
+        table {
+            width: 800px;
+        }
+        
+        th {
+            text-align: center;
+            border-bottom: 2px solid black;
+            border-top: 1px solid black;
+        }
+        
+        tr {
+            text-align: center;
+        }
+        
+        tr.even {
+            background-color: rgba(209, 232, 0, 0.544);
+        }
+        
+        tr:hover {
+            cursor: pointer;
+        }
+        
+        tr.announcements:hover {
+            cursor: auto;
+        }
+        
+        #eventList {
+            text-align: center;
+            padding-bottom: 60px;
+            border-bottom: 2px solid black;
+        }
+        
+        li#academicFilter {
+            margin-left: 0px;
+        }
+        
+        .filterButtons {
+            width: 100px;
+            height: 100px;
+            transition: all .3s ease-in-out;
+            transform: scale(1);
+            outline: 0;
+        }
+        
+        .filterButtons#academicsFilter {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .filterButtons#artsFilter {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .filterButtons#athleticsFilter {
+            padding-bottom: 10px;
+        }
+        
+        #eventTable {
+            padding-bottom: 100px;
+            border-bottom: 10px solid black;
+        }
+        
+        #announcementsTitle {
+            text-align: center;
+            font-size: 50px;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+        
+        .even.announcements {
+            background-color: rgba(235, 180, 52, 0.544);
+        }
+        
+        #announcementList {
+            margin-bottom: 100px;
+        }
+        
+        #storeEliminateButton {
+            background-color: white;
+            width: 30px;
+            border-bottom: 0px;
+            border-top: 0px;
+        }
+        
+        .rejectButton:hover {
+            -webkit-filter: invert() sepia() saturate(8000%) drop-shadow(3px 3px 5px red);
+        }
+        
+        .approveButton:hover {
+            -webkit-filter: saturate(8000%) drop-shadow(3px 3px 5px green);
+        }
+        
+        tr.announcements:hover {
+            color: black;
+        }
+        
+        .sideButtons {
+            background-color: white;
+        }
+        
+        #storeApproveButton {
+            background-color: white;
+            width: 30px;
+            border-bottom: 0px;
+            border-top: 0px;
+        }
+    </style>
+
+</head>
+
+
+
+<body>
+
+    <h1 id="logo"><img src="./images/websiteLogo.png" width="823" class="topStuff" /></h1>
+
+    </br>
+    <h2 id='currentEventsTitle'>Potenial Events</h2>
+
+
+    <div id='eventList'>
+        <table align="center">
+            <tr class='even'>
+                <th>Event</th>
+                <th>Category</th>
+                <th>Activity</th>
+                <th>Location</th>
+                <th>Date & Time</th>
+
+            </tr>
+            <tr title="stuff y'@o" id="RHS Golf vs Heritage" class="data">
+                <td>RHS Golf vs Heritage</td>
+                <td>HI</td>
+                <td>Hi</td>
+                <td>HI</td>
+                <td>Hi</td>
+                <td class="sideButtons"><input class="approveButton" type="image" src="./images/approveButton.png" width='15px' /></td>
+                <td class="sideButtons"><input class="rejectButton" type="image" src="./images/deleteButton.png" width='15px' /></td>
+            </tr>
+
+        </table>
+    </div>
+
+
+
+
+
+
+    <h2 id="announcementsTitle">Potential Announcements</h2>
+
+    <div id='announcementList'>
+        <table align="center">
+            <tr class='even announcements'>
+                <th>Announcement</th>
+                <th id="storeApproveButton"></th>
+                <th id="storeEliminateButton"></th>
+            </tr>
+            <tr id="RHS Golf vs Heritage" class="data announcements">
+                <td>RHS Golf vs Heritage</td>
+                <td class="sideButtons"><input class="approveButton" type="image" src="./images/approveButton.png" width='15px' /></td>
+                <td class="sideButtons"><input class="rejectButton" type="image" src="./images/deleteButton.png" width='15px' /></td>
+            </tr>
+            <tr class='even announcements'>
+                <td>RHS Football vs Bentonville</td>
+
+                <td class="sideButtons"><input class="approveButton" type="image" src="./images/approveButton.png" width='15px' /></td>
+                <td class="sideButtons"><input class="rejectButton" type="image" src="./images/deleteButton.png" width='15px' /></td>
+            </tr>
+
+
+
+        </table>
+    </div>
+
+
+
+
+
+
+
+</body>
+
+
+
+</html>
