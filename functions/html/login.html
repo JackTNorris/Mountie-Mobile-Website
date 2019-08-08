@@ -13,39 +13,86 @@
     
     #loginBox {
         border-radius: 25px;
-        background-color: blue;
+        background-image: linear-gradient(blue, lightblue);
         width: 400px;
         height: 130px;
+        text-align: center;
         display: flex;
-        align-content: center;
+        align-items: center;
         justify-content: center;
         margin: auto;
     }
     
     #loginButton {
+        margin-top: 10px;
         text-align: center;
     }
     
     #errorBox {
         color: red;
     }
+    
+    #user {
+        text-align: center;
+        border-radius: 10px;
+        transition: ease-in-out .5s width;
+        width: 200px;
+        height: 27px;
+        margin-bottom: 8px;
+    }
+    
+    #user:hover {
+        width: 250px;
+        border-color: blue;
+    }
+    
+    #pwd:hover {
+        width: 250px;
+        border-color: blue;
+    }
+    
+    #pwd {
+        text-align: center;
+        padding: 0;
+        border-radius: 10px;
+        transition: ease-in-out .5s width;
+        width: 200px;
+        height: 27px;
+    }
+    
+    #logNButton {
+        border-radius: 10px;
+        width: 100px;
+        transition: ease-in-out .5s;
+        background-color: white;
+    }
+    
+    #logNButton:hover {
+        width: 150px;
+        background-color: blue;
+    }
 </style>
 
 <body>
     <h1 id="title"><img src="./images/websiteLogo.png" width="823" /></h1>
     <div id="loginBox">
-        <form method="POST" action="/home" id='login'>
-            <p>Username<input type="email" name="user" id="user" /></p>
-            <p>Password <input type="password" name="pwd" id="pwd" /></p>
-            <div id='loginButton'>
-                <input type='button' value='Login' onclick="signIn()" />
-                <input type="hidden" name="authToken" id="authToken" value="" />
-                <input type="hidden" name="typePost" value="fromLogin" />
-            </div>
-            <p id="errorBox"></p>
+        <form method="POST" action="/login" id='login'>
+
+            <input type="email" name="user" id="user" placeholder="Username" />
+            </br>
+            <input type="password" name="pwd" id="pwd" placeholder="Password" />
+            <input type="hidden" name="authToken" id="authToken" value="" />
+
 
         </form>
+
     </div>
+    <div id='loginButton'>
+        <input type='button' id="logNButton" value='LOGIN' onclick="signIn()" />
+
+
+    </div>
+    <p id="errorBox"></p>
     <!--
 
     -->

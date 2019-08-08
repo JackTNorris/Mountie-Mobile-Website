@@ -85,15 +85,24 @@ app.get('/testing', (req, res) => {
 });
 
 app.post('/deleteAnnouncement', (req, res) => {
-    db.ref('/announcements/' + req.body.announcementPath.toString()).remove()
-        .then(() => {
-            res.redirect('/home');
-            return "";
-        })
-        .catch((error) => {
-            console.log(error.message);
-            res.redirect('/home');
-        })
+    if (req.cookies.__session) {
+        admin.auth().verifyIdToken(req.cookies.__session.toString())
+            .then((decodedToken) => {
+                db.ref('/announcements/' + req.body.announcementPath.toString()).remove();
+                res.redirect('/home');
+                return "";
+            })
+            .catch((error) => {
+                res.send("ERROR MOFO");
+                res.redirect('/login');
+            });
+    } else {
+        res.redirect('/login');
+        //res.send("You don't have a cookie mofo");
+    }
+
+
+
 });
 
 
@@ -176,13 +185,16 @@ app.get('/dacronjobyo', (req, res) => {
                                 body: event.val().description //payload is the second argument of send to device, it contains notificaiotn and other settings
                             }
                         }
-                        admin.messaging().sendToDevice(usersToSendTo, payload).then(() => {
-                            console.log("All devices have been notified!");
-                            console.log("Date I think is today: " + new Date().toString());
-                            return "";
-                        }).catch((error) => {
-                            console.log(error.message);
-                        });
+                        if (usersToSendTo.length > 0) {
+                            admin.messaging().sendToDevice(usersToSendTo, payload).then(() => {
+                                console.log("All devices have been notified!");
+                                console.log("Date I think is today: " + new Date().toString());
+                                return "";
+                            }).catch((error) => {
+                                console.log(error.message);
+                            });
+                        }
+
 
                     }); //
                 }
@@ -200,7 +212,8 @@ app.get('/createAnnouncement', (req, res) => {
                 return "";
             })
             .catch((error) => {
-                res.send("ERROR MOFO");
+                console.log(error.message);
+                res.redirect('/login');
             });
     } else {
         res.redirect('/login');
@@ -210,66 +223,74 @@ app.get('/createAnnouncement', (req, res) => {
 });
 
 app.post('/createAnnouncement', (req, res) => {
-    let newAnnouncementRef = db.ref('/announcements').push();
-    newAnnouncementRef.set({
-        message: req.body.message.toString(),
-        dateEntered: new Date().getTime()
-    });
 
-    //Delete later
-    var payload = {
-        notification: {
-            title: 'New Announcement',
-            body: req.body.message.toString()
-        }
-    };
+    if (req.cookies.__session) {
+        //Delete later
+        var payload = {
+            notification: {
+                title: 'New Announcement',
+                body: req.body.message.toString()
+            }
+        };
+        admin.auth().verifyIdToken(req.cookies.__session).then(() => {
+                let newAnnouncementRef = db.ref('/announcements').push();
+                newAnnouncementRef.set({
+                    message: req.body.message.toString(),
+                    dateEntered: new Date().getTime()
+                });
+                return admin.messaging().sendToDevice(registrationTokens, payload);
+            }).then(() => {
+                res.redirect('/home');
+                return "";
+            })
+            .catch((error) => {
+                console.log(error.message);
+                res.redirect('/login');
+            });
+    } else {
+        res.redirect('/login');
+    }
 
 
-    // Send a message to the devices corresponding to the provided
-    // registration tokens.
-    admin.messaging().sendToDevice(registrationTokens, payload)
-        .then((response) => {
-            // See the MessagingDevicesResponse reference documentation for
-            // the contents of response.
-            console.log('Successfully sent message:', response);
-            return "";
-        })
-        .catch((error) => {
-            console.log('Error sending message:', error);
-        });
-
-    //deleteLater
-    res.redirect('/home');
 })
 
 app.post('/editEvent', (req, res) => {
-    let updateRef = db.ref('/events/' + req.body.category);
-    let today = new Date();
-    let timeString = "";
-    db.ref('/events/' + req.body.ogCategory + '/' + req.body.ogName).remove();
+    if (req.cookies.__session) {
+        admin.auth().verifyIdToken(req.cookies.__session).then(() => {
+                let updateRef = db.ref('/events/' + req.body.category);
+                let today = new Date();
+                let timeString = "";
+                db.ref('/events/' + req.body.ogCategory + '/' + req.body.ogName).remove();
 
-    if (!(req.body.time.toString() === "" || req.body.time.toString() === null)) {
-        timeString += "T" + req.body.time.toString();
+                if (!(req.body.time.toString() === "" || req.body.time.toString() === null)) {
+                    timeString += "T" + req.body.time.toString();
+                }
+
+                return updateRef.child(cleanse4FB(req.body.name.toString())).set({
+                    name: req.body.name.toString(),
+                    category: req.body.category.toString(),
+                    activity: req.body.activity.toString(),
+                    date: req.body.date.toString() + timeString,
+                    location: req.body.location.toString(),
+                    //time: req.body.eventTime.toString(),
+                    isSpecial: (req.body.isSpecial) ? true : false,
+                    description: req.body.description.toString(),
+                    updatedOn: today.toDateString()
+                });
+            })
+            .then(() => {
+                res.redirect('/home');
+                return "";
+            })
+            .catch((error) => {
+                res.send(error.message);
+                res.redirect('/login');
+            })
+    } else {
+        res.redirect('/login');
     }
 
-    updateRef.child(cleanse4FB(req.body.name.toString())).set({
-            name: req.body.name.toString(),
-            category: req.body.category.toString(),
-            activity: req.body.activity.toString(),
-            date: req.body.date.toString() + timeString,
-            location: req.body.location.toString(),
-            //time: req.body.eventTime.toString(),
-            isSpecial: (req.body.isSpecial) ? true : false,
-            description: req.body.description.toString(),
-            updatedOn: today.toDateString()
-        })
-        .then(() => {
-            res.redirect('/home');
-            return "";
-        })
-        .catch((error) => {
-            res.send(error.message);
-        })
+
 
 });
 
@@ -298,17 +319,70 @@ app.get('/viewQueue', (req, res) => {
     }
 });
 
-
-app.post('/deleteEvent', (req, res) => {
-    var deleteRef = db.ref('/events/' + req.body.ogCategory + '/' + cleanse4FB(req.body.ogName));
-    deleteRef.remove().then(() => {
-            res.redirect('/home');
-            return this;
+app.post('/viewQueue', (req, res) => {
+    let eventToApprove = null;
+    db.ref('/eventQueue').once('value', (dataSnapshot) => {
+            dataSnapshot.forEach((item) => {
+                if (item.val().name === req.body.eventName) {
+                    eventToApprove = item.val();
+                }
+            });
+        }).then(() => {
+            if (eventToApprove) {
+                switch (req.body.eventAction) {
+                    case "approve":
+                        db.ref('/events/' + eventToApprove.category).child(cleanse4FB(req.body.eventName)).set({
+                            name: eventToApprove.name,
+                            category: eventToApprove.category,
+                            activity: eventToApprove.activity,
+                            date: eventToApprove.date,
+                            location: eventToApprove.location,
+                            //time: req.body.eventTime.toString(),
+                            isSpecial: (eventToApprove.isSpecial) ? true : false,
+                            description: eventToApprove.description,
+                            updatedOn: eventToApprove.updatedOn
+                        })
+                        db.ref('/eventQueue/' + cleanse4FB(eventToApprove.name)).remove();
+                        break;
+                    case "reject":
+                        db.ref('/eventQueue/' + cleanse4FB(req.body.eventName)).remove();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return "";
+        }).then(() => {
+            res.redirect('/viewQueue');
+            return "";
         })
         .catch((error) => {
             console.log(error.message);
-            res.redirect('/home');
-        });
+        })
+        /*
+    
+        */
+
+})
+
+
+app.post('/deleteEvent', (req, res) => {
+    if (req.cookies.__session) {
+        admin.auth().verifyIdToken(req.cookies.__session).then(() => {
+                var deleteRef = db.ref('/events/' + req.body.ogCategory + '/' + cleanse4FB(req.body.ogName));
+                return deleteRef.remove();
+            })
+            .then(() => {
+                res.redirect('/home');
+                return "";
+            })
+            .catch(() => {
+                res.redirect('/login');
+            })
+    } else {
+        res.redirect('/login');
+    }
+
 
 })
 
@@ -345,15 +419,21 @@ app.get('/addEvent', (req, res) => {
 
 
 
-app.get('/editEvent', (req, res) => {
-    //req.body.event2edit;
 
-})
 
 app.post('/viewEvent', (req, res) => {
-    renderEventView(res, req.body.event2view);
-    console.log(req.body.event2view);
-})
+    if (req.cookies.__session) {
+        admin.auth().verifyIdToken(req.cookies.__session).then((decodedToken) => {
+            renderEventView(res, req.body.event2view, decodedToken);
+            return "";
+        }).catch((error) => {
+            console.log(error.message);
+            res.redirect('/login');
+        })
+    } else {
+        res.redirect('/login');
+    }
+});
 
 
 
@@ -373,8 +453,79 @@ app.get('/home', (req, res) => {
 });
 
 
+app.post('/login', (req, res) => {
+    //this part of my code receives the idToken passed to it from the front end. it then validates it and stores it in a cookie
+    admin.auth().verifyIdToken(req.body.authToken.toString())
+        .then((decodedToken) => {
+            //var uid = decodedToken.uid;
+            //console.log(uid);
+            var expDate = new Date();
+
+            res.cookie("__session", req.body.authToken, { //cookie must be named __session, or firebase won't let it pass through http for parsing
+                maxAge: 360000 //makes cookie expire in 1 hr, which is this many milliseconds
+
+            });
+
+            // res.set('Set-Cookie', `__session=${req.body.authToken.toString()};`) //cookie must be named session, or firebase won't let it pass through
+            //res.send("SUCCESS BOOOOOOOOIIIIIIII!" + "\n" + req.cookies.userToken.toString());
+
+            res.redirect('/home')
+
+
+            return decodedToken;
+        })
+        .catch((error) => {
+            // Handle error
+            res.send("Invalid Cookie");
+
+            console.log(error.message);
+        });
+});
+
+app.post('/addEvent', (req, res) => {
+    admin.auth().verifyIdToken(req.cookies.__session.toString()) //function that verifies my id token
+        .then((decodedToken) => {
+            var today = new Date();
+            let uidIsAdmin = false;
+            db.ref('/adminUsers').once('value', (dataSnapshot) => {
+                if (dataSnapshot.hasChild(decodedToken.uid)) {
+                    ref = db.ref('/events/' + req.body.eventCategory.toString());
+                } else {
+                    ref = db.ref('/eventQueue');
+                }
+
+                let checkTime = '';
+                if (req.body.eventTime.toString() !== '' && req.body.eventTime.toString() !== null) {
+                    checkTime = 'T' + req.body.eventTime.toString();
+                }
+                ref.child(cleanse4FB(req.body.eventName.toString())).set({
+                    name: req.body.eventName.toString(),
+                    category: req.body.eventCategory.toString(),
+                    activity: req.body.eventActivity.toString(),
+                    date: req.body.eventDate.toString() + checkTime,
+                    location: req.body.location.toString(),
+                    //time: req.body.eventTime.toString(),
+                    description: req.body.eventDescription.toString(),
+                    isSpecial: (req.body.isSpecial) ? true : false,
+                    updatedOn: today.toDateString()
+                });
+            })
+
+
+            renderHome(res, decodedToken);
+            //res.end();
+            return decodedToken;
+        })
+        .catch((error) => {
+            res.redirect('/login');
+            console.log(error.message);
+        });
+});
+
 
 //posts data from a database from the http POST request
+
+/*
 app.post('/home', (req, res) => {
 
     switch (req.body.typePost.toString()) {
@@ -451,22 +602,22 @@ app.post('/home', (req, res) => {
             res.redirect('/login');
             break;
     }
+*/
 
+/*
+ref = db.ref('/events/' + req.body.eventCategory.toString());
+ref.child(req.body.eventName.toString()).set({
+    name: req.body.eventName.toString(),
+    category: req.body.eventCategory.toString(),
+    activity: req.body.eventActivity.toString(),
+    date: req.body.eventDate.toString(),
+    time: req.body.eventTime.toString(),
+    description: req.body.eventDescription.toString()
+})
+res.send('hello');
 
-    /*
-    ref = db.ref('/events/' + req.body.eventCategory.toString());
-    ref.child(req.body.eventName.toString()).set({
-        name: req.body.eventName.toString(),
-        category: req.body.eventCategory.toString(),
-        activity: req.body.eventActivity.toString(),
-        date: req.body.eventDate.toString(),
-        time: req.body.eventTime.toString(),
-        description: req.body.eventDescription.toString()
-    })
-    res.send('hello');
-    */
 });
-
+*/
 
 
 
@@ -549,7 +700,12 @@ var renderHome = function(res, decodedToken) {
             res.write("        }\n");
             res.write("\n");
             res.write("        #add-event-button {\n");
-            res.write("            float: right;\n");
+            if (uidIsAdmin) {
+                res.write("             float: right;");
+
+            } else {
+                res.write("            right: 0;position: absolute;\n");
+            }
             res.write("        }\n");
             res.write("\n");
             res.write("        #create-announcement-button {\n");
@@ -802,9 +958,13 @@ var renderHome = function(res, decodedToken) {
             res.write("<h1 id=\"logo\"><img src=\"./images/websiteLogo.png\" width=\"823\" class=\"topStuff\" /></h1>");
             res.write("");
             res.write("<div id=\"buttons\">");
-            res.write("   <form method = 'GET' action = '/createAnnouncement' id=\"create-announcement-button\" class=\"topStuff\">");
-            res.write("       <input type=\"image\" src=\"./images/create-announcement-button.png\" width=\"200\" class=\"topStuff\" />");
-            res.write("   </form>");
+            if (uidIsAdmin) {
+                res.write("   <form method = 'GET' action = '/createAnnouncement' id=\"create-announcement-button\" class=\"topStuff\">");
+                res.write("       <input type=\"image\" src=\"./images/create-announcement-button.png\" width=\"200\" class=\"topStuff\" />");
+                res.write("   </form>");
+            }
+
+
             res.write("   <form method=\"GET\" action=\"/addEvent\" id=\"add-event-button\" class=\"topStuff\">");
             res.write("       <input type=\"image\" src=\"./images/addEventButton.png\" width=\"200\" />");
             res.write("   </form>");
@@ -864,7 +1024,11 @@ var renderHome = function(res, decodedToken) {
             res.write("    <table align=\"center\">\n");
             res.write("        <tr class='even announcements'>\n");
             res.write("            <th>Announcement</th>\n");
-            res.write("            <th id=\"storeEliminateButton\"></th>\n");
+
+            if (uidIsAdmin) {
+                res.write("            <th id=\"storeEliminateButton\"></th>\n");
+            }
+
             res.write("        </tr>\n");
 
 
@@ -877,7 +1041,9 @@ var renderHome = function(res, decodedToken) {
                 }
                 res.write(">");
                 res.write("<td>" + announcements[i - 1].message.toString() + "</td>");
-                res.write("<td class = 'deleteAnnouncementButtons'><input onClick = \"deleteAnnouncement('" + announcementPaths[i - 1] + "')\"" + " id='deleteAnnouncementButton' type='image' src='./images/deleteButton.png' width='15px'/></td>")
+                if (uidIsAdmin) {
+                    res.write("<td class = 'deleteAnnouncementButtons'><input onClick = \"deleteAnnouncement('" + announcementPaths[i - 1] + "')\"" + " id='deleteAnnouncementButton' type='image' src='./images/deleteButton.png' width='15px'/></td>");
+                }
                 res.write("</tr>");
             }
 
@@ -931,12 +1097,12 @@ var renderQueue = function(res, decodedToken) {
             announcementQueue.push(announcement.val());
             announcementQueueKeys.push(announcement.key);
         })
-    })
+    });
     let eventQueuePromise = db.ref('/eventQueue').orderByChild('updatedOn').once('value', (dataSnapshot) => {
         dataSnapshot.forEach((event) => {
             eventQueue.push(event.val())
         })
-    })
+    });
 
     Promise.all([uidVerificationPromise, eventQueuePromise, announcementQueuePromise]).then(() => {
         res.write("<!DOCTYPE html>\n");
@@ -1068,6 +1234,25 @@ var renderQueue = function(res, decodedToken) {
         res.write("        }\n");
         res.write("    </style>\n");
         res.write("\n");
+        res.write("<script>\n");
+        res.write("    var approveEvent = function(component){\n");
+        res.write("        let verifyEventForm = document.getElementById('adminVerifyEvent');\n");
+        res.write("        let eventName = document.getElementsByName('eventName')[0];\n");
+        res.write("        let eventAction = document.getElementsByName('eventAction')[0];\n");
+        res.write("        eventName.setAttribute('value', component.getAttribute('value'));\n");
+        res.write("        eventAction.setAttribute('value', 'approve');\n");
+        res.write("        verifyEventForm.submit()\n");
+        res.write("    }\n");
+        res.write("\n");
+        res.write("    var rejectEvent = function(component){\n");
+        res.write("        let verifyEventForm = document.getElementById('adminVerifyEvent');\n");
+        res.write("        let eventName = document.getElementsByName('eventName')[0];\n");
+        res.write("        let eventAction = document.getElementsbyName('eventAction')[0];\n");
+        res.write("        eventName.setAttribute('value', component.getAttribute('value'));\n");
+        res.write("        eventAction.setAttribute('value', 'reject');\n");
+        res.write("        verifyEventForm.submit()\n");
+        res.write("    }\n");
+        res.write("</script>\n");
         res.write("</head>\n");
         res.write("\n");
         res.write("\n");
@@ -1077,7 +1262,7 @@ var renderQueue = function(res, decodedToken) {
         res.write("<h1 id=\"logo\"><img src=\"./images/websiteLogo.png\" width=\"823\" class=\"topStuff\" /></h1>\n");
         res.write("\n");
         res.write("</br>\n");
-        res.write("<h2 id='currentEventsTitle'>Potenial Events</h2>\n");
+        res.write("<h2 id='currentEventsTitle'>Potential Events</h2>\n");
         res.write("\n");
         res.write("\n");
         res.write("<div id='eventList'>\n");
@@ -1112,28 +1297,6 @@ var renderQueue = function(res, decodedToken) {
         res.write("\n");
         res.write("\n");
         res.write("\n");
-        res.write("<h2 id=\"announcementsTitle\">Potential Announcements</h2>\n");
-        res.write("\n");
-        res.write("<div id='announcementList'>\n");
-        res.write("    <table align=\"center\">\n");
-        res.write("        <tr class='even announcements'>\n");
-        res.write("            <th>Announcement</th>\n");
-        res.write("            <th id=\"storeApproveButton\"></th>\n");
-        res.write("            <th id=\"storeEliminateButton\"></th>\n");
-        res.write("        </tr>\n");
-        res.write("        <tr id=\"RHS Golf vs Heritage\" class=\"data announcements\">\n");
-        res.write("            <td>RHS Golf vs Heritage</td>\n");
-        res.write("            <td class=\"sideButtons\"><input class=\"approveButton\" type=\"image\" src=\"./images/approveButton.png\" width='15px' /></td>\n");
-        res.write("            <td class=\"sideButtons\"><input class=\"rejectButton\" type=\"image\" src=\"./images/deleteButton.png\" width='15px' /></td>\n");
-        res.write("        </tr>\n");
-        res.write("        <tr class='even announcements'>\n");
-        res.write("            <td>RHS Football vs Bentonville</td>\n");
-        res.write("\n");
-        res.write("            <td class=\"sideButtons\"><input class=\"approveButton\" type=\"image\" src=\"./images/approveButton.png\" width='15px' /></td>\n");
-        res.write("            <td class=\"sideButtons\"><input class=\"rejectButton\" type=\"image\" src=\"./images/deleteButton.png\" width='15px' /></td>\n");
-        res.write("        </tr>\n");
-        res.write("    </table>\n");
-        res.write("</div>\n");
         res.write("\n");
         res.write("\n");
         res.write("\n");
@@ -1141,6 +1304,10 @@ var renderQueue = function(res, decodedToken) {
         res.write("\n");
         res.write("\n");
         res.write("\n");
+        res.write("<form method = \"POST\" action = \"/viewQueue\" id = \"adminVerifyEvent\" >\n");
+        res.write("    <input  type = \"hidden\" value = \"\" name = \"eventName\"/>\n");
+        res.write("    <input  type = \"hidden\" value = \"\" name = \"eventAction\"/>\n");
+        res.write("</form>\n");
         res.write("</body>\n");
         res.write("\n");
         res.write("</html>\n");
@@ -1159,10 +1326,20 @@ var renderQueue = function(res, decodedToken) {
 
 
 
-var renderEventView = function(res, eventName) {
+var renderEventView = function(res, eventName, decodedToken) {
     ref = db.ref('/events');
-    ref.once('value', (snapshot) => {
-            snapshot.forEach((item) => {
+    var allEvents;
+    let uidIsAdmin = false;
+    let retrieveEventsPromise = ref.once('value', (snapshot) => {
+        allEvents = snapshot;
+    })
+    let checkUIDPromise = db.ref('/adminUsers').once('value', (snapshot) => {
+        if (snapshot.hasChild(decodedToken.uid)) {
+            uidIsAdmin = true;
+        }
+    })
+    Promise.all([retrieveEventsPromise, checkUIDPromise]).then(() => {
+            allEvents.forEach((item) => {
                 item.forEach((thing) => {
                     let chosenEvent = thing.val();
                     if (chosenEvent.name === eventName) { //this is the line
@@ -1251,58 +1428,67 @@ var renderEventView = function(res, eventName) {
                         res.write("            setSelectedActivity('" + chosenEvent.activity.toString() + "');\n");
                         res.write("        }\n");
                         res.write("\n");
-                        res.write("        var makeEventsEditable = function() {\n");
-                        res.write("            for (let i = 0; i < inputData.length; i++) {\n");
-                        res.write("                inputData[i].style.borderWidth = '1px';\n");
-                        res.write("                inputData[i].style.outline = '1';\n");
-                        res.write("                inputData[i].disabled = false;\n");
-                        res.write("                inputData[i].readOnly = false;\n");
-                        res.write("            }\n");
-                        res.write("            var z = document.getElementById('makeChangesButton');\n");
-                        res.write("            z.hidden = false;\n");
-                        res.write("            var x = document.getElementById('name-change');\n");
-                        res.write("\n");
-                        res.write("\n");
-                        res.write("            x.style.display = \"initial\"\n");
-                        res.write("\n");
-                        res.write("        }\n");
-                        res.write("\n");
-                        res.write("        var confirmDeletion = function() {\n");
-                        res.write("            // eslint-disable-next-line no-alert\n");
-                        res.write("            var cD = confirm(\"Are you sure you want to delete this event?\");\n");
-                        res.write("            if (cD) {\n");
-                        res.write("                var d = document.getElementById('delete-event-form');\n");
-                        res.write("                d.submit();\n");
-                        res.write("            }\n");
-                        res.write("\n");
-                        res.write("        }\n");
-                        res.write("\n");
-                        res.write("        var validateForm = function() {\n");
-                        res.write("\n");
-                        res.write("            var requiredData = document.getElementsByClassName('required');\n");
-                        res.write("            var alertedOnce = false;\n");
-                        res.write("            for (var i = 0; i < requiredData.length; i++) {\n");
-                        res.write("                requiredData[i].style.borderColor = \"gray\";\n");
-                        res.write("                //console.log(inputData[i].value);\n");
-                        res.write("                if (requiredData[i].value === null || requiredData[i].value === \"\") {\n");
-                        res.write("\n");
-                        res.write("                    requiredData[i].style.borderColor = \"red\";\n");
-                        res.write("                    if (!alertedOnce) {\n");
-                        res.write("                        // eslint-disable-next-line no-alert\n");
-                        res.write("                        alert(\"Make Sure you fill in all required data\");\n");
-                        res.write("                        alertedOnce = true;\n");
-                        res.write("                    }\n");
-                        res.write("\n");
-                        res.write("\n");
-                        res.write("                }\n");
-                        res.write("            }\n");
-                        res.write("            if (!alertedOnce) {\n");
-                        res.write("                var makeChangesForm = document.getElementById('makeChangesForm');\n");
-                        res.write("                makeChangesForm.submit();\n");
-                        res.write("            }\n");
-                        res.write("\n");
-                        res.write("\n");
-                        res.write("        }\n");
+
+                        if (uidIsAdmin) {
+                            res.write("        var makeEventsEditable = function() {\n");
+                            res.write("            for (let i = 0; i < inputData.length; i++) {\n");
+                            res.write("                inputData[i].style.borderWidth = '1px';\n");
+                            res.write("                inputData[i].style.outline = '1';\n");
+                            res.write("                inputData[i].disabled = false;\n");
+                            res.write("                inputData[i].readOnly = false;\n");
+                            res.write("            }\n");
+                            res.write("            var z = document.getElementById('makeChangesButton');\n");
+                            res.write("            z.hidden = false;\n");
+                            res.write("            var x = document.getElementById('name-change');\n");
+                            res.write("\n");
+                            res.write("\n");
+                            res.write("            x.style.display = \"initial\"\n");
+                            res.write("\n");
+                            res.write("        }\n");
+
+
+
+                            res.write("\n");
+                            res.write("        var confirmDeletion = function() {\n");
+                            res.write("            // eslint-disable-next-line no-alert\n");
+                            res.write("            var cD = confirm(\"Are you sure you want to delete this event?\");\n");
+                            res.write("            if (cD) {\n");
+                            res.write("                var d = document.getElementById('delete-event-form');\n");
+                            res.write("                d.submit();\n");
+                            res.write("            }\n");
+                            res.write("\n");
+                            res.write("        }\n");
+                            res.write("\n");
+
+
+                            res.write("        var validateForm = function() {\n");
+                            res.write("\n");
+                            res.write("            var requiredData = document.getElementsByClassName('required');\n");
+                            res.write("            var alertedOnce = false;\n");
+                            res.write("            for (var i = 0; i < requiredData.length; i++) {\n");
+                            res.write("                requiredData[i].style.borderColor = \"gray\";\n");
+                            res.write("                //console.log(inputData[i].value);\n");
+                            res.write("                if (requiredData[i].value === null || requiredData[i].value === \"\") {\n");
+                            res.write("\n");
+                            res.write("                    requiredData[i].style.borderColor = \"red\";\n");
+                            res.write("                    if (!alertedOnce) {\n");
+                            res.write("                        // eslint-disable-next-line no-alert\n");
+                            res.write("                        alert(\"Make Sure you fill in all required data\");\n");
+                            res.write("                        alertedOnce = true;\n");
+                            res.write("                    }\n");
+                            res.write("\n");
+                            res.write("\n");
+                            res.write("                }\n");
+                            res.write("            }\n");
+                            res.write("            if (!alertedOnce) {\n");
+                            res.write("                var makeChangesForm = document.getElementById('makeChangesForm');\n");
+                            res.write("                makeChangesForm.submit();\n");
+                            res.write("            }\n");
+                            res.write("\n");
+                            res.write("\n");
+                            res.write("        }\n");
+                        }
+
                         res.write("\n");
                         res.write("        var setSelectedActivity = function(selectedActivity) {\n");
                         res.write("            var allOpts = document.getElementsByTagName('option');\n");
@@ -1369,15 +1555,19 @@ var renderEventView = function(res, eventName) {
                         res.write("\n");
                         res.write("<body>\n");
                         res.write("<h1 id=\"logo\"><img src=\"./images/websiteLogo.png\" width=\"823px\" /></h1>\n");
-                        res.write("<form method=\"POST\" id=\"delete-event-form\" action=\"/deleteEvent\" hidden=\"true\">\n");
-                        res.write("<input type = 'hidden' name = 'ogName' value = \"" + cleanseInput(chosenEvent.name.toString(), true) + "\"/>")
-                        res.write("<input type = 'hidden' name = 'ogCategory' value = \"" + chosenEvent.category.toString() + "\"/>")
+                        if (uidIsAdmin) {
+                            res.write("<form method=\"POST\" id=\"delete-event-form\" action=\"/deleteEvent\" hidden=\"true\">\n");
+                            res.write("<input type = 'hidden' name = 'ogName' value = \"" + cleanseInput(chosenEvent.name.toString(), true) + "\"/>")
+                            res.write("<input type = 'hidden' name = 'ogCategory' value = \"" + chosenEvent.category.toString() + "\"/>")
 
-                        res.write("</form>\n");
-                        res.write("<input type=\"image\" id=\"delete-event-button\" src=\"./images/delete-event-button.png\" width=\"200px\" onclick=\"confirmDeletion()\" />\n");
-                        res.write("\n");
-                        res.write("\n");
-                        res.write("<input onclick=\"makeEventsEditable()\" id=\"edit-event-button\" type=\"image\" src=\"./images/edit-event-button.png\" width=\"200px\" />\n");
+                            res.write("</form>\n");
+
+                            res.write("<input type=\"image\" id=\"delete-event-button\" src=\"./images/delete-event-button.png\" width=\"200px\" onclick=\"confirmDeletion()\" />\n");
+
+
+                            res.write("<input onclick=\"makeEventsEditable()\" id=\"edit-event-button\" type=\"image\" src=\"./images/edit-event-button.png\" width=\"200px\" />\n");
+
+                        }
                         res.write("\n");
                         res.write("<h1 id=\"eventTitle\">" + chosenEvent.name.toString() + "</h1>\n");
                         res.write("</br>\n");
@@ -1386,16 +1576,20 @@ var renderEventView = function(res, eventName) {
                         res.write("\n");
                         res.write("\n");
                         res.write("\n");
-                        res.write("<form id=\"makeChangesForm\" method=\"POST\" action=\"/editEvent\">\n");
-                        res.write("<input name = 'ogName' type = 'hidden' value = \"" + cleanseInput(chosenEvent.name.toString(), true) + "\"/>");
-                        res.write("<input name = 'ogCategory' type = 'hidden' value = \"" + chosenEvent.category.toString() + "\"/>");
-                        res.write("    <div id=\"name-change\">\n");
-                        res.write("        <h3>Changed Event Name:</h3>\n");
-                        res.write("        <span class=\"eventData\">\n");
-                        res.write("                            <input value = \"" + cleanseInput(chosenEvent.name.toString(), true) + "\" id=\"name\"  name = \"name\" type=\"text\" class=\"inputData required\" />\n");
-                        res.write("                    </span>\n");
-                        res.write("\n");
-                        res.write("    </div>\n");
+
+                        if (uidIsAdmin) {
+                            res.write("<form id=\"makeChangesForm\" method=\"POST\" action=\"/editEvent\">\n");
+                            res.write("<input name = 'ogName' type = 'hidden' value = \"" + cleanseInput(chosenEvent.name.toString(), true) + "\"/>");
+                            res.write("<input name = 'ogCategory' type = 'hidden' value = \"" + chosenEvent.category.toString() + "\"/>");
+                            res.write("    <div id=\"name-change\">\n");
+                            res.write("        <h3>Changed Event Name:</h3>\n");
+                            res.write("        <span class=\"eventData\">\n");
+                            res.write("                            <input value = \"" + cleanseInput(chosenEvent.name.toString(), true) + "\" id=\"name\"  name = \"name\" type=\"text\" class=\"inputData required\" />\n");
+                            res.write("                    </span>\n");
+                            res.write("\n");
+                            res.write("    </div>\n");
+                        }
+
                         res.write("\n");
                         res.write("\n");
                         res.write("    <h3>Category: </h3>\n");
@@ -1460,7 +1654,10 @@ var renderEventView = function(res, eventName) {
                         res.write("                </span>\n");
                         res.write("<h3>Special Event?:  <input type = \"checkbox\" class = \"inputData\" disabled = true name = \"isSpecial\" " + (chosenEvent.isSpecial ? "checked" : "") + " /> </h3>")
                         res.write("\n</br>\n")
-                        res.write("</form>\n");
+                        if (uidIsAdmin) {
+                            res.write("</form>\n");
+
+                        }
                         res.write("\n");
                         res.write("\n");
 
@@ -1475,7 +1672,9 @@ var renderEventView = function(res, eventName) {
                         }
 
                         res.write("</br>\n");
-                        res.write("<input id='makeChangesButton' hidden=\"true\" type=\"button\" value=\"Make Changes\" onclick=\"validateForm()\" />\n");
+                        if (uidIsAdmin) {
+                            res.write("<input id='makeChangesButton' hidden=\"true\" type=\"button\" value=\"Make Changes\" onclick=\"validateForm()\" />\n");
+                        }
                         res.write("\n");
                         res.write("</body>\n");
                         res.write("\n");
@@ -1485,6 +1684,7 @@ var renderEventView = function(res, eventName) {
                     }
                 });
             });
+            return "";
         })
         .then(() => {
             res.end();
@@ -1494,6 +1694,7 @@ var renderEventView = function(res, eventName) {
             res.redirect('/home');
             console.log(error.message);
         });
+
 
 }
 
