@@ -485,6 +485,7 @@ app.post('/login', (req, res) => {
 app.post('/addEvent', (req, res) => {
     admin.auth().verifyIdToken(req.cookies.__session.toString()) //function that verifies my id token
         .then((decodedToken) => {
+            consoe.log("The uid of the person that added the event " + req.body.eventName.toString() + ":" + decodedToken.uid);
             var today = new Date();
             let uidIsAdmin = false;
             db.ref('/adminUsers').once('value', (dataSnapshot) => {
