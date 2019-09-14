@@ -16,7 +16,7 @@
             ".read": true,
             ".write": false
         },
-        "appusers": {
+        "appUsers": {
             ".read": true,
             ".write": true
         }
