@@ -9,13 +9,13 @@ require("firebase/firestore");
 require('firebase/database');
 // Add the Firebase products that you want to use
 const firebaseConfig = {
-    apiKey: "AIzaSyB_JrcF7ogRqsOo2h9jW0GrA5_vSMCdgLA",
-    authDomain: "mountie-mobile.firebaseapp.com",
-    databaseURL: "https://mountie-mobile.firebaseio.com",
+    apiKey: "*****",
+    authDomain: "*****",
+    databaseURL: "*****",
     projectId: "mountie-mobile",
-    storageBucket: "mountie-mobile.appspot.com",
-    messagingSenderId: "269099119210",
-    appId: "1:269099119210:web:8159a0e2aeab5378"
+    storageBucket: "*****",
+    messagingSenderId: "*****",
+    appId: "*****"
 };
 
 admin.initializeApp();
