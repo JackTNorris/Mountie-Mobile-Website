@@ -8,10 +8,12 @@ This is the Mountie Mobile Website, designed and developed <b>solely</b> by Jack
 
 <h4>Features:</h4>
 <ul>
+  <li>Secure login through the use of Firebase</li>
+  <li>Admin user privileges</li>
   <li>Add events to Mountie Mobile App directly from website</li>
   <li>Send out push notification announcements to Mountie Mobile users</li>
   <li>Edit events</li>
-  </ul>
+ </ul>
 
 Link (not really much use w/out login):  https://mountie-mobile.firebaseapp.com
 
