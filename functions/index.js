@@ -40,6 +40,8 @@ exports.tokenUpdater = userRefThing.on("child_added", (snapshot, prevChildKey) =
     let g = snapshot.val();
     console.log(g.info.token)
     registrationTokens.push(g.info.token);
+
+
 });
 
 let athleticActivities = [
@@ -1692,6 +1694,7 @@ var renderEventView = function(res, eventKey, decodedToken) {
                             }
                             res.write("\n");
                         }
+                        res.write("            +            \"<option value= \\\"Other\\\">Other</option>\";\n");
                         /*
                         res.write("                    thing2.innerHTML = \"<option value= \\\"Baseball\\\">Baseball</option>\" +\n");
                         res.write("                        \"<option value= \\\"Basketball\\\">Basketball</option>\" +\n");
@@ -1718,6 +1721,8 @@ var renderEventView = function(res, eventKey, decodedToken) {
                             }
                             res.write("\n");
                         }
+                        res.write("            +            \"<option value= \\\"Other\\\">Other</option>\";\n");
+
                         /*
                         res.write("                    thing2.innerHTML =\n");
                         res.write("                        \"<option value= \\\"Orchestra\\\">Orchestra</option>\" +\n");
@@ -1737,6 +1742,8 @@ var renderEventView = function(res, eventKey, decodedToken) {
                             }
                             res.write("\n");
                         }
+                        res.write("            +            \"<option value= \\\"Other\\\">Other</option>\";\n");
+
                         /*
                         res.write("                    thing2.innerHTML =\n");
                         res.write("                        \"<option value= \\\"Tutoring\\\">Tutoring</option>\" +\n");
@@ -1755,6 +1762,8 @@ var renderEventView = function(res, eventKey, decodedToken) {
                             }
                             res.write("\n");
                         }
+                        res.write("            +            \"<option value= \\\"Other\\\">Other</option>\";\n");
+
 
 
 

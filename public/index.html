@@ -2,127 +2,172 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
-
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/6.0.2/firebase-app.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/6.0.2/firebase-auth.js"></script>
-    <script defer src="/__/firebase/6.0.2/firebase-database.js"></script>
-    <script defer src="/__/firebase/6.0.2/firebase-messaging.js"></script>
-    <script defer src="/__/firebase/6.0.2/firebase-storage.js"></script>
-    <!-- initialize the SDK after all desired features are loaded -->
-    <script defer src="/__/firebase/init.js"></script>
-
-    <style media="screen">
-        body {
-            background: #ECEFF1;
-            color: rgba(0, 0, 0, 0.87);
-            font-family: Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        
-        #message {
-            background: white;
-            max-width: 360px;
-            margin: 100px auto 16px;
-            padding: 32px 24px;
-            border-radius: 3px;
-        }
-        
-        #message h2 {
-            color: #ffa100;
-            font-weight: bold;
-            font-size: 16px;
-            margin: 0 0 8px;
-        }
-        
-        #message h1 {
-            font-size: 22px;
-            font-weight: 300;
-            color: rgba(0, 0, 0, 0.6);
-            margin: 0 0 16px;
-        }
-        
-        #message p {
-            line-height: 140%;
-            margin: 16px 0 24px;
-            font-size: 14px;
-        }
-        
-        #message a {
-            display: block;
-            text-align: center;
-            background: #039be5;
-            text-transform: uppercase;
-            text-decoration: none;
-            color: white;
-            padding: 16px;
-            border-radius: 4px;
-        }
-        
-        #message,
-        #message a {
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-        }
-        
-        #load {
-            color: rgba(0, 0, 0, 0.4);
-            text-align: center;
-            font-size: 13px;
-        }
-        
-        @media (max-width: 600px) {
-            body,
-            #message {
-                margin-top: 0;
-                background: white;
-                box-shadow: none;
-            }
-            body {
-                border-top: 16px solid #ffa100;
-            }
-        }
-    </style>
+    <title>Mountie Mobile | Login</title>
 </head>
 
+<style>
+    #title {
+        color: blue;
+        text-align: center;
+    }
+    
+    #loginBox {
+        border-radius: 25px;
+        background-image: linear-gradient(blue, lightblue);
+        width: 400px;
+        height: 130px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: auto;
+    }
+    
+    #loginButton {
+        margin-top: 10px;
+        text-align: center;
+    }
+    
+    #errorBox {
+        color: red;
+        text-align: center;
+    }
+    
+    #user {
+        text-align: center;
+        border-radius: 10px;
+        transition: ease-in-out .5s width;
+        width: 200px;
+        height: 27px;
+        margin-bottom: 8px;
+    }
+    
+    #user:hover {
+        width: 250px;
+        border-color: blue;
+    }
+    
+    #pwd:hover {
+        width: 250px;
+        border-color: blue;
+    }
+    
+    #pwd {
+        text-align: center;
+        padding: 0;
+        border-radius: 10px;
+        transition: ease-in-out .5s width;
+        width: 200px;
+        height: 27px;
+    }
+    
+    #logNButton {
+        border-radius: 10px;
+        width: 100px;
+        transition: ease-in-out .5s;
+        background-color: white;
+    }
+    
+    #logNButton:hover {
+        width: 150px;
+        background-color: blue;
+    }
+</style>
+
 <body>
-    <div id="message">
-        <h2>Welcome</h2>
-        <h1>Firebase Hosting Setup Complete</h1>
-        <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-        <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+    <h1 id="title"><img src="./images/websiteLogo.png" width="823" /></h1>
+    <div id="loginBox">
+        <form method="POST" action="/login" id='login'>
+
+            <input type="email" name="user" id="user" placeholder="Username" />
+            </br>
+            <input type="password" name="pwd" id="pwd" placeholder="Password" />
+            <input type="hidden" name="authToken" id="authToken" value="" />
+
+
+        </form>
+
     </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
+    <div id='loginButton'>
+        <input type='button' id="logNButton" value='LOGIN' onclick="signIn()" />
+
+
+    </div>
+    <p id="errorBox"></p>
+    <!--
+
+    -->
+
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="/__/firebase/6.0.4/firebase-app.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="/__/firebase/6.0.4/firebase-auth.js"></script>
+    <script src="/__/firebase/6.0.4/firebase-firestore.js"></script>
+
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+ https://firebase.google.com/docs/web/setup#config-web-app -->
 
     <script>
-        window.onload = function() {
-            window.location.replace("https://mountie-mobile.firebaseapp.com/login");
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-            // // The Firebase SDK is initialized and available here!
-            //
-            // firebase.auth().onAuthStateChanged(user => { });
-            // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-            // firebase.messaging().requestPermission().then(() => { });
-            // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-            //
-            // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        var firebaseConfig = {
+            apiKey: "AIzaSyB_JrcF7ogRqsOo2h9jW0GrA5_vSMCdgLA",
+            authDomain: "mountie-mobile.firebaseapp.com",
+            databaseURL: "https://mountie-mobile.firebaseio.com",
+            projectId: "mountie-mobile",
+            storageBucket: "mountie-mobile.appspot.com",
+            messagingSenderId: "269099119210",
+            appId: "1:269099119210:web:8159a0e2aeab5378"
+        };
+        //console.log(document.getElementById('user').value);
+        // Initialize Firebase
 
-            try {
-                let app = firebase.app();
-                let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
-                document.getElementById('load').innerHTML = `Firebase SDK loaded with ${features.join(', ')}`;
-            } catch (e) {
-                console.error(e);
-                document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
-            }
-        });
+        firebase.initializeApp(firebaseConfig);
+
+        var auth = firebase.auth();
+
+        function signIn() {
+            var email = document.getElementById('user').value;
+            var pass = document.getElementById('pwd').value;
+
+
+
+
+            auth.signInWithEmailAndPassword(email, pass) //signing in with email and password
+                .then(function() {
+                    firebase.auth().currentUser.getIdToken(true).then(function(idToken) { //if all goes well, I get the id token and pass it to my backend
+
+                        var thing3 = document.getElementById('authToken');
+                        thing3.value = idToken;
+                        console.log(document.getElementById('authToken').value);
+                        var loginForm = document.getElementById('login');
+                        loginForm.submit();
+
+
+
+
+                    }).catch(function(error) {
+                        console.log(error.message);
+                    });
+                })
+                .catch(function(error) {
+                    // Handle Errors here.
+                    var thing = document.getElementById('errorBox');
+                    thing.innerText = "Your email or password was incorrect";
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    console.log(errorCode);
+                    console.log(errorMessage);
+                    console.log(email);
+
+                    // ...
+                });
+
+
+        }
     </script>
 </body>
+
 
 </html>

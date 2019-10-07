@@ -19,6 +19,10 @@
         "appUsers": {
             ".read": true,
             ".write": true
+        },
+        "appInfo": {
+            ".read": true,
+            ".write": false
         }
     }
 }
