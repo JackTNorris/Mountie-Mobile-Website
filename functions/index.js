@@ -9,10 +9,8 @@ require("firebase/firestore");
 require('firebase/database');
 // Add the Firebase products that you want to use
 const firebaseConfig = {
-    apiKey: "*****",
-    authDomain: "*****",
-    databaseURL: "*****",
     apiKey: "AIzaSyB_JrcF7ogRqsOo2h9jW0GrA5_vSMCdgLA",
+    authDomain: "mountie-mobile.firebaseapp.com",
     databaseURL: "https://mountie-mobile.firebaseio.com",
     projectId: "mountie-mobile",
     storageBucket: "mountie-mobile.appspot.com",
