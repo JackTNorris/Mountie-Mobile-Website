@@ -12,10 +12,12 @@ const firebaseConfig = {
     apiKey: "*****",
     authDomain: "*****",
     databaseURL: "*****",
+    apiKey: "AIzaSyB_JrcF7ogRqsOo2h9jW0GrA5_vSMCdgLA",
+    databaseURL: "https://mountie-mobile.firebaseio.com",
     projectId: "mountie-mobile",
-    storageBucket: "*****",
-    messagingSenderId: "*****",
-    appId: "*****"
+    storageBucket: "mountie-mobile.appspot.com",
+    messagingSenderId: "269099119210",
+    appId: "1:269099119210:web:8159a0e2aeab5378"
 };
 
 admin.initializeApp();
@@ -36,9 +38,10 @@ var adminUsersRef = db.ref('/adminUsers');
 
 let registrationTokens = [];
 
+
 exports.tokenUpdater = userRefThing.on("child_added", (snapshot, prevChildKey) => {
     let g = snapshot.val();
-    console.log(g.info.token)
+    //console.log(g.info.token)
     registrationTokens.push(g.info.token);
 
 
@@ -172,41 +175,50 @@ app.get('/dacronjobyo', (req, res) => {
                 today.setHours(today.getHours() - 5); //this adjusts things so that this function executes @ 12:00 CDT
                 let tempDate = new Date(event.val().date);
                 today.setDate(today.getDate() + 1); //in essence, after this step, the today var is now one day after today
-                if (today.getMonth() === tempDate.getMonth() && today.getDate() === tempDate.getDate()) {
+                if (today.getMonth() === tempDate.getMonth() && today.getDate() === tempDate.getDate()) { //if date of event is equal to tomorrows date
                     let eventCategory = event.val().category;
                     let eventActivity = event.val().activity;
                     let appUsersRef = db.ref('/appUsers');
-                    appUsersRef.once('value', (snapshot) => {
+                    appUsersRef.once('value', (snapshot) => { //on data being in the appUsersRef database, pass a snapshot of the data containing all users
                         let usersToSendTo = [];
                         snapshot.forEach((user) => {
-                            if (user.val().notificationsPreferences) {
+                            if (user.val().notificationsPreferences) { //checks if the user even has notifications enabled
                                 let notifArray = []; //a boolean array of all the types of activities the student wants to be notified of
                                 let eventTypes = [];
                                 switch (eventCategory.toLowerCase()) {
                                     case 'athletics':
                                         eventTypes = athleticActivities.slice(); //using slice so that athletics activities won't directly be affected
-                                        user.val().notificationsPreferences.athleticsNotif.forEach((item) => {
+                                        if (user.val().notificationsPreferences.athleticsNotif)
 
-                                            notifArray.push(item);
-                                        })
+                                            if (Object.keys(user.val().notificationsPreferences.athleticsNotif).length === athleticActivities.length)
+                                                user.val().notificationsPreferences.athleticsNotif.forEach((item) => {
+                                                    notifArray.push(item);
+                                                })
+
                                         break;
                                     case 'arts':
                                         eventTypes = artsActivities.slice();
-                                        user.val().notificationsPreferences.artsNotif.forEach((item) => {
-                                            notifArray.push(item);
-                                        })
+                                        if (user.val().notificationsPreferences.artsNotif)
+                                            if (Object.keys(user.val().notificationsPreferences.artsNotif).length === artsActivities.length)
+                                                user.val().notificationsPreferences.artsNotif.forEach((item) => {
+                                                    notifArray.push(item);
+                                                })
                                         break;
                                     case 'academics':
                                         eventTypes = academicActivities.slice();
-                                        user.val().notificationsPreferences.academicsNotif.forEach((item) => {
-                                            notifArray.push(item);
-                                        })
+                                        if (user.val().notificationsPreferences.academicsNotif)
+                                            if (Object.keys(user.val().notificationsPreferences.academicsNotif).length === academicActivities.length)
+                                                user.val().notificationsPreferences.academicsNotif.forEach((item) => {
+                                                    notifArray.push(item);
+                                                })
                                         break;
                                     case 'miscellaneous':
                                         eventTypes = miscellaneousActivities.slice();
-                                        user.val().notificationsPreferences.miscellaneousNotif.forEach((item) => {
-                                            notifArray.push(item);
-                                        });
+                                        if (user.val().notificationsPreferences.miscellaneousNotif)
+                                            if (Object.keys(user.val().notificationsPreferences.miscellaneousNotif).length === miscellaneousActivities.length)
+                                                user.val().notificationsPreferences.miscellaneousNotif.forEach((item) => {
+                                                    notifArray.push(item);
+                                                });
                                         break;
                                     default:
                                         break;
