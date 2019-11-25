@@ -18,3 +18,5 @@ This is the Mountie Mobile Website, designed and developed <b>solely</b> by Jack
 Link (not really much use w/out login):  https://mountie-mobile.firebaseapp.com
 
 Using Firebase for my database and NodeJS for my backend
+
+Note: Yes, I know that it's messy, and that I'm kind of an idiot for not using a framework and putting practically all my backend code in index.js. I didn't know a lot coming into this project, so some of the code is definitely going to be a bit messy
