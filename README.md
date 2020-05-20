@@ -23,7 +23,7 @@ Note: Yes, I know that it's messy, and that I'm kind of an idiot for not using a
 
 <h3>A full list of things wrong with this code (and to improve)</h3>
 <ul>
-  <li>I didn't use a framework, despite multiple versions existing</li>
+  <li>I didn't use a framework, despite multiple good choices existing to make this process easier & cleaner</li>
   <li>Inline styling for html files</li>
   <li>Didn't seperate business logic from http endpoints</li>
   <li>Too much configuration in index.js</li>
