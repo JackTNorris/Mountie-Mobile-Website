@@ -20,3 +20,12 @@ Link (not really much use w/out login):  https://mountie-mobile.firebaseapp.com
 Using Firebase for my database and NodeJS for my backend
 
 Note: Yes, I know that it's messy, and that I'm kind of an idiot for not using a framework and putting practically all my backend code in index.js. I didn't know a lot coming into this project, so some of the code is definitely going to be a bit messy. I'm currently working on a version that has a clean backend architecture and used Angular for the frontend
+
+<h3>A full list of things wrong with this code (and to improve)</h3>
+<ul>
+  <li>I didn't use a framework, despite multiple versions existing</li>
+  <li>Inline styling for html files</li>
+  <li>Didn't seperate business logic from http endpoints</li>
+  <li>Too much configuration in index.js</li>
+  <li>Everything is in the index.js</li>
+</ul>
