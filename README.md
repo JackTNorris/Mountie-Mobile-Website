@@ -28,4 +28,5 @@ Note: Yes, I know that it's messy, and that I'm kind of an idiot for not using a
   <li>Didn't seperate business logic from http endpoints</li>
   <li>Too much configuration in index.js</li>
   <li>Everything is in the index.js</li>
+  <li>Was an idiot and didn't leverage client side api's to render dynamic data with javascript</li>
 </ul>
