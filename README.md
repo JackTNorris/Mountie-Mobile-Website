@@ -2,7 +2,7 @@
 
 <h4>Description</h4>
 
-This is the Mountie Mobile Website, designed and developed <b>solely</b> by Jack Norris. It's a little ghetto, but hey, it's not really client facing (it's for the adminstrators). With this website, you can submit events and announcements for approval from the school and have them appear on the Mountie Mobile App. It's poorly designed in messy, but I've improved immensely since making this
+This is the Mountie Mobile Website, designed and developed <b>solely</b> by Jack Norris. It's a little ghetto, but hey, it's not really client facing (it's for the adminstrators). With this website, you can submit events and announcements for approval from the school and have them appear on the Mountie Mobile App. It's poorly designed and messy, but I've improved immensely since making this
 
 <p align="center"><kbd><img src = "https://media.giphy.com/media/KGBiQ1NUFLVkF8rmMd/giphy.gif"/></kbd></p>
 
